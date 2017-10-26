@@ -56,9 +56,9 @@ inline xt::pyarray<uint8_t> example2(xt::pyarray<uint8_t> &m)
 template<typename src_voxel_t>
 xt::pyarray<src_voxel_t> apply_mapping( xt::pyarray<src_voxel_t> const &src,
 				   	   	   	   	    	   std::unordered_map<src_voxel_t, src_voxel_t> & labelmap,
-									   bool allow_incomplete_mapping = true )
+									   bool allow_incomplete_mapping = false )
 {
-	std::cout << "apply_mapping(): " << type_name<src_voxel_t>() << std::endl;
+	//std::cout << "apply_mapping(): " << type_name<src_voxel_t>() << std::endl;
 
 	typename xt::pyarray<src_voxel_t>::shape_type shape(src.shape().begin(), src.shape().end());
 	xt::pyarray<src_voxel_t> res(shape);
@@ -112,10 +112,15 @@ PYBIND11_PLUGIN(dvidutils)
     m.def("example2", example2, "m"_a);
     m.def("times_two", times_two<uint8_t>, "src"_a);
 
-    m.def("apply_mapping", apply_mapping<uint8_t>,  "src"_a, "labelmap"_a, "allow_incomplete_mapping"_a=true, "Remap a label array.");
-    m.def("apply_mapping", apply_mapping<uint16_t>, "src"_a, "labelmap"_a, "allow_incomplete_mapping"_a=true, "Remap a label array.");
-    m.def("apply_mapping", apply_mapping<uint32_t>, "src"_a, "labelmap"_a, "allow_incomplete_mapping"_a=true, "Remap a label array.");
-    m.def("apply_mapping", apply_mapping<uint64_t>, "src"_a, "labelmap"_a, "allow_incomplete_mapping"_a=true, "Remap a label array.");
+    m.def("apply_mapping", apply_mapping<uint64_t>, "src"_a, "labelmap"_a, "allow_incomplete_mapping"_a=false, "Remap a label array.");
+    m.def("apply_mapping", apply_mapping<uint8_t>,  "src"_a, "labelmap"_a, "allow_incomplete_mapping"_a=false, "Remap a label array.");
+    m.def("apply_mapping", apply_mapping<uint16_t>, "src"_a, "labelmap"_a, "allow_incomplete_mapping"_a=false, "Remap a label array.");
+    m.def("apply_mapping", apply_mapping<uint32_t>, "src"_a, "labelmap"_a, "allow_incomplete_mapping"_a=false, "Remap a label array.");
+
+    m.def("apply_mapping", apply_mapping<int64_t>, "src"_a, "labelmap"_a, "allow_incomplete_mapping"_a=false, "Remap a label array.");
+    m.def("apply_mapping", apply_mapping<int8_t>,  "src"_a, "labelmap"_a, "allow_incomplete_mapping"_a=false, "Remap a label array.");
+    m.def("apply_mapping", apply_mapping<int16_t>, "src"_a, "labelmap"_a, "allow_incomplete_mapping"_a=false, "Remap a label array.");
+    m.def("apply_mapping", apply_mapping<int32_t>, "src"_a, "labelmap"_a, "allow_incomplete_mapping"_a=false, "Remap a label array.");
 
     return m.ptr();
 }

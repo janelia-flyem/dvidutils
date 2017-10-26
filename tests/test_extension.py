@@ -1,29 +1,47 @@
-import dvidutils as m
-from unittest import TestCase
+from itertools import product
+import pytest
 import numpy as np
+import dvidutils
 
 
-class ExampleTest(TestCase):
+INT_DTYPES = [np.uint8, np.uint16, np.uint32, np.uint64,
+              np.int8, np.int16, np.int32, np.int64]
 
-    def test_example1(self):
-        self.assertEqual(4, m.example1([4, 5, 6]))
 
-    def test_example2(self):
-        x = np.array([[0., 1.], [2., 3.]])
-        res = np.array([[2., 3.], [4., 5.]])
-        y = m.example2(x)
-        np.testing.assert_allclose(y, res, 1e-12)
+params = list(product(INT_DTYPES, [1,2,3]))
+ids = [f'{ndim}d-{dtype.__name__}' for (dtype, ndim) in params]
+@pytest.fixture(params=params, ids=ids)
+def apply_mapping_args(request):
+    """
+    pytest "fixture" to cause the test functions below to be called
+    with all desired combinations of ndim and dtype.
+    """
+    dtype, ndim = request.param
+    mapping = {k: k+100 for k in range(10)}
+    original = np.random.randint(0, 10, (3,)*ndim, dtype=dtype)
+    expected = original + 100
+    yield (original, mapping, expected)
 
-    def test_vectorize(self):
-        x1 = np.array([[0, 1], [2, 3]])
-        x2 = np.array([0, 1])
-        res = np.array([[ 1.               ,  1.381773290676036],
-                        [ 1.909297426825682,  0.681422313928007]])
-        y = m.vectorize_example1(x1, x2)
-        np.testing.assert_allclose(y, res, 1e-12)
 
-    def test_readme_example1(self):
-        v = np.arange(15).reshape(3, 5)
-        y = m.readme_example1(v)
-        np.testing.assert_allclose(y, 1.2853996391883833, 1e-12)
+def test_apply_mapping(apply_mapping_args):
+    original, mapping, expected = apply_mapping_args
+    remapped = dvidutils.apply_mapping(original, mapping)
+    assert remapped.dtype == original.dtype, f"Wrong dtype: Expected {original.dtype}, got {remapped.dtype}"
+    assert remapped.shape == original.shape, f"Wrong shape: Expected {original.shape}, got {remapped.shape}"
+    assert (remapped == expected).all(), f"Mapping was not applied correctly!"
 
+
+def test_apply_incomplete_mapping(apply_mapping_args):
+    original, mapping, expected = apply_mapping_args
+    
+    original.flat[0] = 255
+    expected.flat[0] = 255
+    
+    remapped = dvidutils.apply_mapping(original, mapping, True)
+    assert remapped.dtype == original.dtype, f"Wrong dtype: Expected {original.dtype}, got {remapped.dtype}"
+    assert remapped.shape == original.shape, f"Wrong shape: Expected {original.shape}, got {remapped.shape}"
+    assert (remapped == expected).all(), f"Mapping was not applied correctly!"
+
+
+if __name__ == "__main__":
+    pytest.main()
