@@ -1,7 +1,10 @@
+#include <numeric>
+#include <cmath>
+#include <unordered_map>
+
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
-#include "xtensor/xmath.hpp"
 #include "xtensor/xarray.hpp"
 #include "xtensor/xnoalias.hpp"
 
@@ -9,118 +12,75 @@
 #include "xtensor-python/pyarray.hpp"
 #include "xtensor-python/pyvectorize.hpp"
 
-#include <iostream>
-#include <numeric>
-#include <cmath>
-#include <unordered_map>
+#include "utils.hpp"
+#include "labelmapper.hpp"
 
 namespace py = pybind11;
 
-using std::int8_t;
-using std::int16_t;
-using std::int32_t;
-using std::int64_t;
-
-using std::uint8_t;
-using std::uint16_t;
-using std::uint32_t;
-using std::uint64_t;
-
-typedef float float32_t;
-typedef double float64_t;
-
-
-template <typename T> std::string type_name() { return "Unknown type"; }
-//template <typename T> std::string type_name() { return "Unknown type"; }
-
-template <> std::string type_name<uint8_t>()  { return "uint8_t"; }
-template <> std::string type_name<uint16_t>() { return "uint16_t"; }
-template <> std::string type_name<uint32_t>() { return "uint32_t"; }
-template <> std::string type_name<uint64_t>() { return "uint64_t"; }
-
-template<typename src_voxel_t>
-xt::pyarray<src_voxel_t> times_two( xt::pyarray<src_voxel_t> & src )
+namespace dvidutils
 {
-	std::cout << "times_two(): " << type_name<src_voxel_t>() << std::endl;
+    // From dict
+    template<typename src_voxel_t>
+    xt::pyarray<src_voxel_t> apply_mapping( xt::pyarray<src_voxel_t> const &src,
+                                            std::unordered_map<src_voxel_t, src_voxel_t> labelmap,
+                                            bool allow_incomplete_mapping = false )
+    {
+        LabelMapper<src_voxel_t, src_voxel_t> mapper(std::move(labelmap));
+        auto remapped = mapper.apply_mapping(src, allow_incomplete_mapping);
+        return remapped;
+    }
 
-	xt::pyarray<src_voxel_t> res;
-	res = static_cast<src_voxel_t>(2) * src;
-	return res;
-}
+    // From domain/codomain pair
+    template<typename domain_t, typename codomain_t>
+    xt::pyarray<codomain_t> apply_mapping( xt::pyarray<domain_t> const & src_array,
+                                           xt::pyarray<domain_t> const & domain,
+                                           xt::pyarray<codomain_t> const & codomain,
+                                           bool allow_incomplete_mapping = false )
+    {
+        LabelMapper<domain_t, codomain_t> mapper(domain, codomain);
+        auto remapped = mapper.apply_mapping(src_array, allow_incomplete_mapping);
+        return remapped;
+    }
 
-inline xt::pyarray<uint8_t> example2(xt::pyarray<uint8_t> &m)
-{
-    return m + 2;
-}
+    PYBIND11_PLUGIN(dvidutils)
+    {
+        using namespace pybind11::literals;
+        xt::import_numpy();
 
-template<typename src_voxel_t>
-xt::pyarray<src_voxel_t> apply_mapping( xt::pyarray<src_voxel_t> const &src,
-				   	   	   	   	    	   std::unordered_map<src_voxel_t, src_voxel_t> & labelmap,
-									   bool allow_incomplete_mapping = false )
-{
-	//std::cout << "apply_mapping(): " << type_name<src_voxel_t>() << std::endl;
+        py::module m("dvidutils", R"docu(
+            A collection of utility functions for dealing with dvid data
 
-	typename xt::pyarray<src_voxel_t>::shape_type shape(src.shape().begin(), src.shape().end());
-	xt::pyarray<src_voxel_t> res(shape);
+            .. currentmodule:: dvidutils
 
-	{
-		py::gil_scoped_release nogil_context;
+            .. autosummary::
+               :toctree: _generate
+        
+               apply_mapping
 
-		auto lookup_voxel = [&](src_voxel_t px) -> src_voxel_t {
-			auto iter = labelmap.find(px);
-			if (iter != labelmap.end())
-			{
-				return iter->second;
-			}
+        )docu");
 
-			if (allow_incomplete_mapping)
-			{
-				// Key is missing. Return the original value.
-				return static_cast<src_voxel_t>(px);
-			}
-
-			throw py::key_error("Label not found in mapping: " + std::to_string(+px));
-			return 0; // unreachable line
-		};
-
-		xt::noalias(res) = xt::vectorize(lookup_voxel)(src);
-	}
-
-	return res;
-}
-
-// Python Module and Docstrings
-
-PYBIND11_PLUGIN(dvidutils)
-{
-	using namespace pybind11::literals;
-    xt::import_numpy();
-
-    py::module m("dvidutils", R"docu(
-        A collection of utility functions for dealing with dvid data
-
-        .. currentmodule:: dvidutils
-
-        .. autosummary::
-           :toctree: _generate
-	
-		   apply_mapping
-
-    )docu");
+        // FIXME: Maybe this overload will work once xtensor-python #116
+        //m.def("apply_mapping", apply_mapping<uint64_t, uint32_t>, "src"_a, "domain"_a, "codomain"_a, "allow_incomplete_mapping"_a=false, "Remap a label array.");
 
 
-    m.def("example2", example2, "m"_a);
-    m.def("times_two", times_two<uint8_t>, "src"_a);
+        m.def("apply_mapping", apply_mapping<uint64_t, uint64_t>, "src"_a, "domain"_a, "codomain"_a, "allow_incomplete_mapping"_a=false, "Remap a label array.");
+        m.def("apply_mapping", apply_mapping<uint32_t, uint32_t>, "src"_a, "domain"_a, "codomain"_a, "allow_incomplete_mapping"_a=false, "Remap a label array.");
+        m.def("apply_mapping", apply_mapping<uint16_t, uint16_t>, "src"_a, "domain"_a, "codomain"_a, "allow_incomplete_mapping"_a=false, "Remap a label array.");
+        m.def("apply_mapping", apply_mapping<uint8_t,  uint8_t>,  "src"_a, "domain"_a, "codomain"_a, "allow_incomplete_mapping"_a=false, "Remap a label array.");
 
-    m.def("apply_mapping", apply_mapping<uint64_t>, "src"_a, "labelmap"_a, "allow_incomplete_mapping"_a=false, "Remap a label array.");
-    m.def("apply_mapping", apply_mapping<uint8_t>,  "src"_a, "labelmap"_a, "allow_incomplete_mapping"_a=false, "Remap a label array.");
-    m.def("apply_mapping", apply_mapping<uint16_t>, "src"_a, "labelmap"_a, "allow_incomplete_mapping"_a=false, "Remap a label array.");
-    m.def("apply_mapping", apply_mapping<uint32_t>, "src"_a, "labelmap"_a, "allow_incomplete_mapping"_a=false, "Remap a label array.");
+        m.def("apply_mapping", apply_mapping<uint32_t, uint16_t>, "src"_a, "domain"_a, "codomain"_a, "allow_incomplete_mapping"_a=false, "Remap a label array.");
 
-    m.def("apply_mapping", apply_mapping<int64_t>, "src"_a, "labelmap"_a, "allow_incomplete_mapping"_a=false, "Remap a label array.");
-    m.def("apply_mapping", apply_mapping<int8_t>,  "src"_a, "labelmap"_a, "allow_incomplete_mapping"_a=false, "Remap a label array.");
-    m.def("apply_mapping", apply_mapping<int16_t>, "src"_a, "labelmap"_a, "allow_incomplete_mapping"_a=false, "Remap a label array.");
-    m.def("apply_mapping", apply_mapping<int32_t>, "src"_a, "labelmap"_a, "allow_incomplete_mapping"_a=false, "Remap a label array.");
+        
+        m.def("apply_mapping", apply_mapping<uint64_t>, "src"_a, "labelmap"_a, "allow_incomplete_mapping"_a=false, "Remap a label array.");
+        m.def("apply_mapping", apply_mapping<uint8_t>,  "src"_a, "labelmap"_a, "allow_incomplete_mapping"_a=false, "Remap a label array.");
+        m.def("apply_mapping", apply_mapping<uint16_t>, "src"_a, "labelmap"_a, "allow_incomplete_mapping"_a=false, "Remap a label array.");
+        m.def("apply_mapping", apply_mapping<uint32_t>, "src"_a, "labelmap"_a, "allow_incomplete_mapping"_a=false, "Remap a label array.");
 
-    return m.ptr();
+        m.def("apply_mapping", apply_mapping<int64_t>, "src"_a, "labelmap"_a, "allow_incomplete_mapping"_a=false, "Remap a label array.");
+        m.def("apply_mapping", apply_mapping<int8_t>,  "src"_a, "labelmap"_a, "allow_incomplete_mapping"_a=false, "Remap a label array.");
+        m.def("apply_mapping", apply_mapping<int16_t>, "src"_a, "labelmap"_a, "allow_incomplete_mapping"_a=false, "Remap a label array.");
+        m.def("apply_mapping", apply_mapping<int32_t>, "src"_a, "labelmap"_a, "allow_incomplete_mapping"_a=false, "Remap a label array.");
+
+        return m.ptr();
+    }
 }
