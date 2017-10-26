@@ -29,16 +29,31 @@ def labelmapper_args(request):
     mapping = {k: k+100 for k in range(10)}
     original = np.random.randint(0, 10, (3,)*ndim, dtype=dtype_in)
     expected = (original + 100).astype(dtype_out)
-    yield (original, mapping, expected)
+
+    domain = np.fromiter(mapping.keys(), dtype=original.dtype)
+    codomain = np.fromiter(mapping.values(), dtype=expected.dtype)
+
+    yield (original, expected, mapping, domain, codomain)
    
    
 def test_LabelMapper(labelmapper_args):
-    original, mapping, expected = labelmapper_args
-    domain = np.fromiter(mapping.keys(), dtype=original.dtype)
-    codomain = np.fromiter(mapping.values(), dtype=expected.dtype)
+    original, expected, mapping, domain, codomain = labelmapper_args
        
     mapper = LabelMapper(domain, codomain)
     remapped = mapper.apply(original)
+
+    assert remapped.dtype == expected.dtype, f"Wrong dtype: Expected {expected.dtype}, got {remapped.dtype}"
+    assert remapped.shape == original.shape, f"Wrong shape: Expected {original.shape}, got {remapped.shape}"
+    assert (remapped == expected).all(), f"Mapping was not applied correctly!"
+
+def test_LabelMapper_allow_unmapped(labelmapper_args):
+    original, expected, mapping, domain, codomain = labelmapper_args
+
+    original.flat[0] = 127
+    expected.flat[0] = 127
+
+    mapper = LabelMapper(domain, codomain)
+    remapped = mapper.apply(original, allow_unmapped=True)
 
     assert remapped.dtype == expected.dtype, f"Wrong dtype: Expected {expected.dtype}, got {remapped.dtype}"
     assert remapped.shape == original.shape, f"Wrong shape: Expected {original.shape}, got {remapped.shape}"
