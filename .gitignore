@@ -6,3 +6,19 @@ build/
 
 # OS X
 .DS_Store
+
+# sphinx docs
+_build/
+_generate/
+
+# Eclipse/PyDev
+.project
+.pydevproject
+.cproject
+.settings
+
+# pytest
+.cache
+
+
+/Debug/
