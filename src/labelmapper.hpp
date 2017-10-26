@@ -10,6 +10,10 @@
 
 namespace dvidutils
 {
+
+    // Stores a mapping from an original set of labels (the domain)
+    // to a new set of labels (the codomain), and exposes a function "apply()"
+    // to convert arrays of domain label voxels into arrays of codomain label voxels.
     template<typename domain_t, typename codomain_t>
     class LabelMapper
     {
@@ -35,7 +39,7 @@ namespace dvidutils
 
         // Construct from domain and codomain lists
         template <typename domain_list_t, typename codomain_list_t>
-        LabelMapper(domain_list_t domain, codomain_list_t codomain)
+        LabelMapper(domain_list_t const & domain, codomain_list_t const & codomain)
         {
             if (domain.shape().size() != 1 || codomain.shape().size() != 1)
             {
@@ -54,8 +58,8 @@ namespace dvidutils
             }
         }
         
-        template<typename domain_array_t>
-        codomain_array_t apply_mapping( domain_array_t const & src, bool allow_unmapped = false )
+        template <typename domain_array_t>
+        codomain_array_t apply( domain_array_t const & src, bool allow_unmapped = false )
         {
             typename codomain_array_t::shape_type shape(src.shape().begin(), src.shape().end());
 
