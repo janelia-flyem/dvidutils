@@ -57,33 +57,46 @@ namespace dvidutils
                 _mapping[domain(i)] = codomain(i);
             }
         }
-        
+
         template <typename domain_array_t>
-        codomain_array_t apply( domain_array_t const & src, bool allow_unmapped = false )
+        codomain_array_t apply( domain_array_t const & src, bool allow_unmapped=false )
         {
             auto res = codomain_array_t::from_shape(src.shape());
-            {
-                auto lookup_voxel = [&](domain_t px) -> codomain_t {
-                    auto iter = _mapping.find(px);
-                    if (iter != _mapping.end())
-                    {
-                        return iter->second;
-                    }
-                    
-                    if (allow_unmapped)
-                    {
-                        // Key is missing. Return the original value.
-                        return static_cast<typename codomain_array_t::value_type>(px);
-                    }
-                    
-                    throw KeyError("Label not found in mapping: " + std::to_string(+px));
-                    return 0; // unreachable line
-                };
-                
-                xt::noalias(res) = xt::vectorize(lookup_voxel)(src);
-            }
-            
+            _apply(src, res, allow_unmapped);
             return res;
+        }
+
+        // FIXME: It would be nice to figure out how to allow unified function
+        //        signatures that handle in-place and non-in-place calls...
+        template <typename array_t>
+        void apply_inplace( array_t & src, bool allow_unmapped=false )
+        {
+            _apply(src, src, allow_unmapped);
+        }
+
+    private:
+        
+        template <typename domain_array_t, typename codomain_array_t>
+        void _apply( domain_array_t const & src, codomain_array_t & res, bool allow_unmapped=false )
+        {
+            auto lookup_voxel = [&](domain_t px) -> codomain_t {
+                auto iter = _mapping.find(px);
+                if (iter != _mapping.end())
+                {
+                    return iter->second;
+                }
+                
+                if (allow_unmapped)
+                {
+                    // Key is missing. Return the original value.
+                    return static_cast<typename codomain_array_t::value_type>(px);
+                }
+                
+                throw KeyError("Label not found in mapping: " + std::to_string(+px));
+                return 0; // unreachable line
+            };
+            
+            xt::noalias(res) = xt::vectorize(lookup_voxel)(src);
         }
         
     private:

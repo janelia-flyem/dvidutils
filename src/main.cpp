@@ -30,6 +30,10 @@ namespace dvidutils
 
     // Exports LabelMapper<D,C> as a Python class,
     // And add a Python overload of LabelMapper()
+    //
+    // FIXME: LabelMapper's KeyError type is translated to an ordinary Python
+    //        exception, not a Python KeyError in particular.
+    //        We could fix this with a translation function that throws a py::key_error
     template<typename domain_t, typename codomain_t>
     auto export_label_mapper(py::module m)
     {
@@ -38,7 +42,14 @@ namespace dvidutils
 
         auto cls = py::class_<LabelMapper_t>(m, name.c_str());
         cls.def(py::init<xt::pyarray<domain_t>, xt::pyarray<codomain_t>>());
-        cls.def("apply", &LabelMapper_t::template apply<xt::pyarray<domain_t>>,
+
+        cls.def("apply",
+                &LabelMapper_t::template apply<xt::pyarray<domain_t>>,
+                "src"_a, "allow_unmapped"_a=false,
+                py::call_guard<py::gil_scoped_release>());
+
+        cls.def("apply_inplace",
+                &LabelMapper_t::template apply_inplace<xt::pyarray<domain_t>>,
                 "src"_a, "allow_unmapped"_a=false,
                 py::call_guard<py::gil_scoped_release>());
 
