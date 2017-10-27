@@ -1,5 +1,5 @@
 dvidutils
-==============
+=========
 
 A collection of utility functions for dealing with dvid data
 
@@ -7,73 +7,45 @@ A collection of utility functions for dealing with dvid data
 Installation
 ------------
 
-**On Unix (Linux, OS X)**
-
- - clone this repository
- - `pip install ./dvidutils`
-
-**On Windows (Requires Visual Studio 2015)**
-
- - For Python 3.5:
-     - clone this repository
-     - `pip install ./dvidutils`
- - For earlier versions of Python, including Python 2.7:
-
-   xtensor requires a C++14 compliant compiler (i.e. Visual Studio 2015 on
-   Windows). Running a regular `pip install` command will detect the version
-   of the compiler used to build Python and attempt to build the extension
-   with it. We must force the use of Visual Studio 2015.
-
-     - clone this repository
-     - `"%VS140COMNTOOLS%\..\..\VC\vcvarsall.bat" x64`
-     - `set DISTUTILS_USE_SDK=1`
-     - `set MSSdk=1`
-     - `pip install ./dvidutils`
-
-   Note that this requires the user building `dvidutils` to have registry edition
-   rights on the machine, to be able to run the `vcvarsall.bat` script.
-
-
-Windows runtime requirements
-----------------------------
-
-On Windows, the Visual C++ 2015 redistributable packages are a runtime
-requirement for this project. It can be found [here](https://www.microsoft.com/en-us/download/details.aspx?id=48145).
-
-If you use the Anaconda python distribution, you may require the Visual Studio
-runtime as a platform-dependent runtime requirement for you package:
-
-```yaml
-requirements:
-  build:
-    - python
-    - setuptools
-    - pybind11
-
-  run:
-   - python
-   - vs2015_runtime  # [win]
+```bash
+conda install -c flyem-forge dvidutils
 ```
 
+Developer Instructions
+----------------------
 
-Building the documentation
---------------------------
-
-Documentation for the example project is generated using Sphinx. Sphinx has the
-ability to automatically inspect the signatures and documentation strings in
-the extension module to generate beautiful documentation in a variety formats.
-The following command generates HTML-based reference documentation; for other
-formats please refer to the Sphinx manual:
-
- - `dvidutils/docs`
- - `make html`
-
-
-Running the tests
------------------
-
-Running the tests requires `pytest`.
+Here's how to make an ordinary Makefile-based build:
 
 ```bash
-py.test .
+
+conda install -c conda-forge python=3.6 cmake xtensor-python
+
+mkdir build
+cd build
+
+# Makefiles
+cmake .. -DCMAKE_BUILD_TYPE=Debug
 ```
+
+On Mac, your best option for C++14 development is to use Xcode.
+(On Linux, your best option is to switch to Mac.)
+
+To use Xcode and its debugger:
+```
+mkdir build-for-xcode
+cd build-for-xcode
+cmake .. -DCMAKE_BUILD_TYPE=Debug -G Xcode
+```
+
+Xcode is finicky about which executables it likes.  Install this special build of Python:
+```
+conda install -c conda-forge python.app
+```
+
+Within Xcode, select your Opt+click the 'Run' button to edit your executable settings:
+
+- Under "Info":
+  - Select `${CONDA_PREFIX}/python.app` as the Executable (NOT `${CONDA_PREFIX}/bin/python.app`).
+- Under "Arguments":
+  - Add an Environment Variable for `PYTHONPATH`: `/path/to/my-dvidutils-repo/build-for-xcode/Debug`
+  - Add an item to "Arguments Passed on Launch": `-m pytest --color=no /path/to/my-dvidutils-repo/tests`
