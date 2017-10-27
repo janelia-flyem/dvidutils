@@ -47,11 +47,11 @@ namespace dvidutils
         m.def("LabelMapper", make_label_mapper<domain_t, codomain_t>, "domain"_a, "codomain"_a);
     }
     
-    PYBIND11_PLUGIN(dvidutils)
+    PYBIND11_MODULE(dvidutils, m) // note: PYBIND11_MODULE requires pybind11 >= 2.2.0
     {
         xt::import_numpy();
 
-        py::module m("dvidutils", R"docu(
+        m.doc() = R"docu(
             A collection of utility functions for dealing with dvid data
 
             .. currentmodule:: dvidutils
@@ -61,7 +61,7 @@ namespace dvidutils
         
                LabelMapper
 
-        )docu");
+        )docu";
 
         // FIXME: uint64_t cases won't work properly until xtensor-python #116 (second part) is fixed.
         export_label_mapper<uint64_t, uint64_t>(m);
@@ -70,8 +70,5 @@ namespace dvidutils
         export_label_mapper<uint32_t, uint32_t>(m);
         export_label_mapper<uint16_t, uint16_t>(m);
         export_label_mapper<uint8_t, uint8_t>(m);
-
-
-        return m.ptr();
     }
 }
