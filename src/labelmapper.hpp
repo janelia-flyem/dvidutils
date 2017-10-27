@@ -61,9 +61,7 @@ namespace dvidutils
         template <typename domain_array_t>
         codomain_array_t apply( domain_array_t const & src, bool allow_unmapped = false )
         {
-            typename codomain_array_t::shape_type shape(src.shape().begin(), src.shape().end());
-
-            codomain_array_t res(shape);
+            auto res = codomain_array_t::from_shape(src.shape());
             {
                 auto lookup_voxel = [&](domain_t px) -> codomain_t {
                     auto iter = _mapping.find(px);
