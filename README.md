@@ -14,6 +14,8 @@ conda install -c flyem-forge dvidutils
 Developer Instructions
 ----------------------
 
+**Note:** Requires gcc >=4.9 or a recent version of clang.
+
 Here's how to make an ordinary Makefile-based build:
 
 ```bash
@@ -25,6 +27,8 @@ cd build
 
 # Makefiles
 cmake .. -DCMAKE_BUILD_TYPE=Debug
+make
+make install
 ```
 
 On Mac, your best option for C++14 development is to use Xcode.
