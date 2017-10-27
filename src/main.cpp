@@ -38,7 +38,9 @@ namespace dvidutils
 
         auto cls = py::class_<LabelMapper_t>(m, name.c_str());
         cls.def(py::init<xt::pyarray<domain_t>, xt::pyarray<codomain_t>>());
-        cls.def("apply", &LabelMapper_t::template apply<xt::pyarray<domain_t>>, "src"_a, "allow_unmapped"_a=false);
+        cls.def("apply", &LabelMapper_t::template apply<xt::pyarray<domain_t>>,
+                "src"_a, "allow_unmapped"_a=false,
+                py::call_guard<py::gil_scoped_release>());
 
         // Add an overload for LabelMapper(), which is actually a function that returns
         // the appropriate LabelMapper type (e.g. LabelMapper_u64u32)
