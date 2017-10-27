@@ -51,4 +51,5 @@ include_directories(${NUMPY_INCLUDE_DIRS})
 #-------------------------------------------------------------------------------------------------------------------
 # Add The module
 #-------------------------------------------------------------------------------------------------------------------
-pybind11_add_module(dvidutils src/main.cpp)
+pybind11_add_module(dvidutils src/main.cpp) # Also locates Python, so we can use e.g. PYTHON_SITE_PACKAGES
+install(TARGETS dvidutils LIBRARY DESTINATION "${PYTHON_SITE_PACKAGES}")
