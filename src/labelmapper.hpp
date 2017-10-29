@@ -76,17 +76,33 @@ namespace dvidutils
         template <typename domain_array_t, typename codomain_array_t>
         void _apply_impl( domain_array_t const & src, codomain_array_t & res, bool allow_unmapped=false )
         {
+            // We assume the global mapping may be quite large,
+            // but each input array apply() probably contains duplicate values.
+            // Caching the mapping values found in src gives a ~10x speed boost.
+            mapping_t cached_mapping;
+            
             auto lookup_voxel = [&](domain_t px) -> codomain_t {
+                
+                auto cache_iter = cached_mapping.find(px);
+                if (cache_iter != cached_mapping.end())
+                {
+                    return cache_iter->second;
+                }
+                
                 auto iter = _mapping.find(px);
                 if (iter != _mapping.end())
                 {
-                    return iter->second;
+                    auto value = iter->second;
+                    cached_mapping[px] = value;
+                    return value;
                 }
                 
                 if (allow_unmapped)
                 {
                     // Key is missing. Return the original value.
-                    return static_cast<typename codomain_array_t::value_type>(px);
+                    auto value = static_cast<typename codomain_array_t::value_type>(px);
+                    cached_mapping[px] = value;
+                    return value;
                 }
                 
                 throw KeyError("Label not found in mapping: " + std::to_string(+px));
