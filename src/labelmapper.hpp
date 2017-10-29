@@ -20,9 +20,6 @@ namespace dvidutils
     public:
         typedef std::unordered_map<domain_t, codomain_t> mapping_t;
 
-        typedef xt::xtensor<domain_t, 1> domain_list_t;
-        typedef xt::xtensor<codomain_t, 1> codomain_list_t;
-
         typedef xt::xarray<domain_t> domain_array_t;
         typedef xt::xarray<codomain_t> codomain_array_t;
 
@@ -62,7 +59,7 @@ namespace dvidutils
         codomain_array_t apply( domain_array_t const & src, bool allow_unmapped=false )
         {
             auto res = codomain_array_t::from_shape(src.shape());
-            _apply(src, res, allow_unmapped);
+            _apply_impl(src, res, allow_unmapped);
             return res;
         }
 
@@ -71,13 +68,13 @@ namespace dvidutils
         template <typename array_t>
         void apply_inplace( array_t & src, bool allow_unmapped=false )
         {
-            _apply(src, src, allow_unmapped);
+            _apply_impl(src, src, allow_unmapped);
         }
 
     private:
         
         template <typename domain_array_t, typename codomain_array_t>
-        void _apply( domain_array_t const & src, codomain_array_t & res, bool allow_unmapped=false )
+        void _apply_impl( domain_array_t const & src, codomain_array_t & res, bool allow_unmapped=false )
         {
             auto lookup_voxel = [&](domain_t px) -> codomain_t {
                 auto iter = _mapping.find(px);
