@@ -45,14 +45,14 @@ namespace dvidutils
             {
                 throw std::runtime_error("Can't initialize LabelMapper: domain and codomain should be 1D arrays");
             }
-            if (domain.size() != codomain.size())
+            if (domain.shape()[0] != codomain.shape()[0])
             {
                 throw std::runtime_error("Can't initialize LabelMapper: "
                                          "domain and codomain arrays don't have matching sizes.");
             }
 
             // Load up the mapping
-            for (size_t i = 0; i < domain.size(); ++i)
+            for (size_t i = 0; i < domain.shape()[0]; ++i)
             {
                 _mapping[domain(i)] = codomain(i);
             }
