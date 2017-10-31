@@ -27,7 +27,7 @@ mkdir build
 cd build
 
 # Makefiles
-cmake .. -DCMAKE_BUILD_TYPE=Debug -DXTENSOR_ENABLE_ASSERT=ON
+cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS_DEBUG="-DXTENSOR_ENABLE_ASSERT=ON"
 make
 make install
 ```
@@ -52,7 +52,8 @@ To use Xcode and its debugger:
 ```
 mkdir build-for-xcode
 cd build-for-xcode
-cmake .. -DCMAKE_BUILD_TYPE=Debug  -DXTENSOR_ENABLE_ASSERT=ON -G Xcode
+cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS_DEBUG="-DXTENSOR_ENABLE_ASSERT=ON"
+open dvidutils.xcodeproj
 ```
 
 Xcode is finicky about which executables it likes.  Install this special build of Python:
