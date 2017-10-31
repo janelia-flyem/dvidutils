@@ -48,6 +48,10 @@ set(PYBIND11_CPP_STANDARD -std=c++14)
 find_package(NumPy REQUIRED)
 include_directories(${NUMPY_INCLUDE_DIRS})
 
+# boost
+FIND_PACKAGE(Boost REQUIRED COMPONENTS container)
+include_directories(AFTER ${Boost_INCLUDE_DIR})
+
 #-------------------------------------------------------------------------------------------------------------------
 # Add The module
 #-------------------------------------------------------------------------------------------------------------------

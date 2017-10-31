@@ -27,7 +27,7 @@ mkdir build
 cd build
 
 # Makefiles
-cmake .. -DCMAKE_BUILD_TYPE=Debug
+cmake .. -DCMAKE_BUILD_TYPE=Debug -DXTENSOR_ENABLE_ASSERT=ON
 make
 make install
 ```
@@ -48,10 +48,11 @@ On Mac, your best option for C++14 development is to use Xcode.
 (On Linux, your best option is to switch to Mac.)
 
 To use Xcode and its debugger:
+
 ```
 mkdir build-for-xcode
 cd build-for-xcode
-cmake .. -DCMAKE_BUILD_TYPE=Debug -G Xcode
+cmake .. -DCMAKE_BUILD_TYPE=Debug  -DXTENSOR_ENABLE_ASSERT=ON -G Xcode
 ```
 
 Xcode is finicky about which executables it likes.  Install this special build of Python:

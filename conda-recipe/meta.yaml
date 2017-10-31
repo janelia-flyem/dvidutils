@@ -20,6 +20,7 @@ requirements:
     - xtensor
     - xtensor-python
     - pybind11 >=2.2.1
+    - boost
 
   run:
     - python {{PY_VER}}*

@@ -6,14 +6,15 @@
 #include "pybind11/stl.h"
 
 #include "xtensor/xarray.hpp"
-#include "xtensor/xnoalias.hpp"
 
 #define FORCE_IMPORT_ARRAY
 #include "xtensor-python/pyarray.hpp"
+#include "xtensor-python/pytensor.hpp"
 #include "xtensor-python/pyvectorize.hpp"
 
 #include "utils.hpp"
 #include "labelmapper.hpp"
+#include "downsample_labels.hpp"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -57,7 +58,24 @@ namespace dvidutils
         // the appropriate LabelMapper type (e.g. LabelMapper_u64u32)
         m.def("LabelMapper", make_label_mapper<domain_t, codomain_t>, "domain"_a, "codomain"_a);
     }
-    
+
+    template <typename T>
+    xt::pyarray<T> py_downsample_labels(xt::pyarray<T> const & labels, int factor, bool suppress_zero )
+    {
+        // FIXME: There's GOT to be a more elegant way to auto-select the right call based on dimansionality
+        if (labels.shape().size() == 3)
+        {
+            return downsample_labels<xt::pyarray<T>, 3>(labels, factor, suppress_zero);
+        }
+        if (labels.shape().size() == 2)
+        {
+            return downsample_labels<xt::pyarray<T>, 2>(labels, factor, suppress_zero);
+        }
+        std::ostringstream ss;
+        ss << "Unsupported number of dimensions: " << labels.shape().size();
+        throw std::runtime_error(ss.str());
+    }
+
     PYBIND11_MODULE(dvidutils, m) // note: PYBIND11_MODULE requires pybind11 >= 2.2.0
     {
         xt::import_numpy();
@@ -80,6 +98,11 @@ namespace dvidutils
 
         export_label_mapper<uint32_t, uint32_t>(m);
         export_label_mapper<uint16_t, uint16_t>(m);
-        export_label_mapper<uint8_t, uint8_t>(m);
+        export_label_mapper<uint8_t,  uint8_t>(m);
+
+        m.def("downsample_labels", &py_downsample_labels<uint64_t>, "labels"_a, "factor"_a, "suppress_zero"_a=false, py::call_guard<py::gil_scoped_release>());
+        m.def("downsample_labels", &py_downsample_labels<uint32_t>, "labels"_a, "factor"_a, "suppress_zero"_a=false, py::call_guard<py::gil_scoped_release>());
+        m.def("downsample_labels", &py_downsample_labels<uint16_t>, "labels"_a, "factor"_a, "suppress_zero"_a=false, py::call_guard<py::gil_scoped_release>());
+        m.def("downsample_labels", &py_downsample_labels<uint8_t>,  "labels"_a, "factor"_a, "suppress_zero"_a=false, py::call_guard<py::gil_scoped_release>());
     }
 }

@@ -7,6 +7,8 @@
 #include "xtensor/xarray.hpp"
 #include "xtensor/xtensor.hpp"
 #include "xtensor/xmath.hpp"
+#include "xtensor/xnoalias.hpp"
+#include "xtensor/xvectorize.hpp"
 
 namespace dvidutils
 {
