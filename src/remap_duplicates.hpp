@@ -1,5 +1,5 @@
-#ifndef DVIDUTILS_MESHSTITCHER_HPP
-#define DVIDUTILS_MESHSTITCHER_HPP
+#ifndef DVIDUTILS_REMAP_DUPLICATES_HPP
+#define DVIDUTILS_REMAP_DUPLICATES_HPP
 
 #include <cstdint>
 #include <unordered_map>
