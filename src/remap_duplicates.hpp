@@ -71,10 +71,8 @@ namespace dvidutils
         }
 
         // Copy to an xtensor array.
-        // This will need to change slightly when I upgrade our xtensor dependency.
-        // They renamed xadapt() to adapt() (and maybe other changes?)
         std::vector<size_t> shape = { changes.size()/2, 2};
-        index_map_array_t results = xt::xadapt(changes, shape);
+        index_map_array_t results = xt::adapt(changes, shape);
         return results;
     }
 }
