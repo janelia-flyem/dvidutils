@@ -43,6 +43,8 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_PREFIX_PATH}/share/cmake/pybind11")
 include(pybind11Tools)
 include_directories("${CMAKE_PREFIX_PATH}/include")
 
+link_directories("${CMAKE_PREFIX_PATH}/lib")
+
 # numpy
 set(PYBIND11_CPP_STANDARD -std=c++14)
 find_package(NumPy REQUIRED)
@@ -56,4 +58,5 @@ include_directories(AFTER ${Boost_INCLUDE_DIR})
 # Add The module
 #-------------------------------------------------------------------------------------------------------------------
 pybind11_add_module(dvidutils src/main.cpp) # Also locates Python, so we can use e.g. PYTHON_SITE_PACKAGES
+target_link_libraries(dvidutils PRIVATE libdraco.a libdracoenc.a libdracodec.a)
 install(TARGETS dvidutils LIBRARY DESTINATION "${PYTHON_SITE_PACKAGES}")

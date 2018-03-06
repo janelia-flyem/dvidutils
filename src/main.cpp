@@ -16,6 +16,7 @@
 #include "labelmapper.hpp"
 #include "downsample_labels.hpp"
 #include "remap_duplicates.hpp"
+#include "pydraco.hpp"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -107,5 +108,10 @@ namespace dvidutils
         m.def("downsample_labels", &py_downsample_labels<uint8_t>,  "labels"_a, "factor"_a, "suppress_zero"_a=false, py::call_guard<py::gil_scoped_release>());
 
         m.def("remap_duplicates", &remap_duplicates<xt::pytensor<float, 2>, xt::pytensor<uint32_t, 2>>, "vertices"_a, py::call_guard<py::gil_scoped_release>());
+        
+        m.def("encode_faces_to_drc_bytes", encode_faces_to_drc_bytes, "vertices"_a, "faces"_a);
+    
+        m.def("decode_drc_bytes_to_faces", decode_drc_bytes_to_faces, "drc_bytes"_a);
+
     }
 }
