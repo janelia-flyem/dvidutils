@@ -118,9 +118,9 @@ std::pair<vertices_array_t, faces_array_t> decode_drc_bytes_to_faces( py::bytes 
     for (auto i = 0; i < pMesh->num_faces(); ++i)
     {
         auto const & face = pMesh->face(FaceIndex(i));
-        faces(i, 0) = face[0].value();
-        faces(i, 1) = face[1].value();
-        faces(i, 2) = face[2].value();
+        faces(i, 0) = att->mapped_index(face[0]).value();
+        faces(i, 1) = att->mapped_index(face[1]).value();
+        faces(i, 2) = att->mapped_index(face[2]).value();
     }
     
     return std::make_pair( std::move(vertices), std::move(faces) );
