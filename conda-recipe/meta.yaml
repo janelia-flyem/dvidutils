@@ -20,11 +20,13 @@ requirements:
     - xtensor >=0.15
     - xtensor-python >=0.17 # uint64 bindings were broken before 0.15
     - pybind11 >=2.2.1 # Required for call_guard
+    - draco 1.0.1
     - boost
 
   run:
     - python {{PY_VER}}*
     - numpy
+    - draco 1.0.1
 
 test:
   requires:
