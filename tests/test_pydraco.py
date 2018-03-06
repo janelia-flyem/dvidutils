@@ -33,10 +33,6 @@ def test_hexagon_roundtrip():
     rt_vertices, rt_faces = decode_drc_bytes_to_faces(drc_bytes)
     rt_vertices = rt_vertices[:,::-1] # XYZ -> ZYX
 
-    from vol2mesh import Mesh
-    Mesh(vertices, faces).serialize('/tmp/orig-hexagon.obj')
-    Mesh(rt_vertices, rt_faces).serialize('/tmp/rt-hexagon.obj')
-
     # draco changes the order of the faces and vertices,
     # so verifying that the mesh hasn't changed is a little tricky.
     _compare(vertices, faces, rt_vertices, rt_faces, drop_duplicates=False)
