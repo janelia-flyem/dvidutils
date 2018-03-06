@@ -25,6 +25,8 @@ int DRACO_SPEED = 5; // See encode.h
 // Encode the given vertices and faces arrays from python
 // into a buffer (bytes object) encoded via draco.
 //
+// Special case: If faces is empty, an empty buffer is returned.
+//
 // Note: No support for vertex normals.
 // Note: The vertices are expected to be passed in X,Y,Z order
 py::bytes encode_faces_to_drc_bytes( vertices_array_t const & vertices,
@@ -32,6 +34,13 @@ py::bytes encode_faces_to_drc_bytes( vertices_array_t const & vertices,
 {
     //auto vertex_count = vertices.shape()[0];
     auto face_count = faces.shape()[0];
+
+    // Special case:
+    // If faces is empty, an empty buffer is returned.
+    if (face_count == 0)
+    {
+        return py::bytes();
+    }
     
     draco::TriangleSoupMeshBuilder mesh_builder;
     mesh_builder.Start(face_count);
@@ -65,11 +74,26 @@ py::bytes encode_faces_to_drc_bytes( vertices_array_t const & vertices,
 // into a xtensor-python arrays for the vertices and faces
 // (which are converted to numpy arrays on the python side).
 //
+// Special case: If drc_bytes is empty, return empty vertices and faces.
+//
 // Note: normals are not decoded (currently)
 // Note: The vertexes are returned in X,Y,Z order.
 std::pair<vertices_array_t, faces_array_t> decode_drc_bytes_to_faces( py::bytes const & drc_bytes )
 {
     using namespace draco;
+    
+    // Special case:
+    // If drc_bytes is empty, return empty vertices and faces.
+    if (py::len(drc_bytes) == 0)
+    {
+        vertices_array_t::shape_type verts_shape = {{0, 3}};
+        vertices_array_t vertices(verts_shape);
+
+        faces_array_t::shape_type faces_shape = {{0, 3}};
+        faces_array_t faces(faces_shape);
+        
+        return std::make_pair( std::move(vertices), std::move(faces) );
+    }
 
     // Extract pointer to raw bytes (avoid copy)
     PyObject * pyObj = drc_bytes.ptr();

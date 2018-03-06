@@ -8,6 +8,15 @@ from dvidutils import encode_faces_to_drc_bytes, decode_drc_bytes_to_faces
 import faulthandler
 faulthandler.enable()
 
+def test_empty():
+    vertices = np.zeros((0,3), np.float32)
+    faces = np.zeros((0,3), np.uint32)
+    drc_bytes = encode_faces_to_drc_bytes(vertices, faces)
+    rt_vertices, rt_faces = decode_drc_bytes_to_faces(drc_bytes)
+    assert rt_vertices.shape == (0,3)
+    assert rt_faces.shape == (0,3)
+
+
 def test_hexagon_roundtrip():
     # This map is correctly labeled with the vertex indices
     _ = -1
@@ -38,7 +47,7 @@ def test_hexagon_roundtrip():
     _compare(vertices, faces, rt_vertices, rt_faces, drop_duplicates=False)
     
 
-def test_random():
+def test_random_roundtrip():
     vertices = np.random.randint(0,100, size=(10, 3)).astype(np.float32)
 
     # Choose carefully to ensure no degenerate faces
