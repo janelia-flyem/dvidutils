@@ -20,6 +20,8 @@ namespace py = pybind11;
 typedef xt::pytensor<float, 2> vertices_array_t;
 typedef xt::pytensor<uint32_t, 2> faces_array_t;
 
+int DRACO_SPEED = 5; // See encode.h
+
 // Encode the given vertices and faces arrays from python
 // into a buffer (bytes object) encoded via draco.
 //
@@ -53,6 +55,7 @@ py::bytes encode_faces_to_drc_bytes( vertices_array_t const & vertices,
 
     draco::EncoderBuffer buf;
     draco::Encoder encoder;
+    encoder.SetSpeedOptions(DRACO_SPEED, DRACO_SPEED);
     encoder.EncodeMeshToBuffer(*pMesh, &buf);
     
     return py::bytes(buf.data(), buf.size());
