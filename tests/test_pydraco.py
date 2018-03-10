@@ -49,14 +49,14 @@ def test_hexagon_roundtrip():
 
 def test_random_roundtrip():
     vertices = np.random.randint(0,100, size=(10, 3)).astype(np.float32)
-
+ 
     # Choose carefully to ensure no degenerate faces
     faces = np.zeros((50,3), dtype=np.uint32)
     for face in faces:
         face[:] = np.random.choice(list(range(10)), size=(3,), replace=False)
     drc_bytes = encode_faces_to_drc_bytes(vertices, faces)
     rt_vertices, rt_faces = decode_drc_bytes_to_faces(drc_bytes)
-     
+      
      # Output may have duplicates because the encoding method I'm using.
      # (I should fix this.  I suspect the 'TriangleSoupMeshBuilder' was a bad option to use.)
     _compare(vertices, faces, rt_vertices, rt_faces, drop_duplicates=True)

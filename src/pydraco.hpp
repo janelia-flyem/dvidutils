@@ -4,7 +4,6 @@
 #include <cstdint>
 
 #include "draco/mesh/mesh.h"
-#include "draco/mesh/triangle_soup_mesh_builder.h"
 #include "draco/compression/encode.h"
 #include "draco/compression/decode.h"
 
@@ -20,7 +19,7 @@ namespace py = pybind11;
 typedef xt::pytensor<float, 2> vertices_array_t;
 typedef xt::pytensor<uint32_t, 2> faces_array_t;
 
-int DRACO_SPEED = 5; // See encode.h
+int DRACO_SPEED = 0; // Best compression. See encode.h
 
 // Encode the given vertices and faces arrays from python
 // into a buffer (bytes object) encoded via draco.
@@ -32,8 +31,10 @@ int DRACO_SPEED = 5; // See encode.h
 py::bytes encode_faces_to_drc_bytes( vertices_array_t const & vertices,
                                      faces_array_t const & faces )
 {
-    //auto vertex_count = vertices.shape()[0];
+    using namespace draco;
+
     auto face_count = faces.shape()[0];
+    auto vertex_count = vertices.shape()[0];
 
     // Special case:
     // If faces is empty, an empty buffer is returned.
@@ -41,31 +42,54 @@ py::bytes encode_faces_to_drc_bytes( vertices_array_t const & vertices,
     {
         return py::bytes();
     }
+
+    Mesh mesh;
+    mesh.set_num_points(vertex_count);
+    mesh.SetNumFaces(face_count);
     
-    draco::TriangleSoupMeshBuilder mesh_builder;
-    mesh_builder.Start(face_count);
+    // Init vertex attribute
+    PointAttribute vert_att_template;
+    vert_att_template.Init( GeometryAttribute::POSITION,    // attribute_type
+                            nullptr,                        // buffer
+                            3,                              // num_components
+                            DT_FLOAT32,                     // data_type
+                            false,                          // normalized
+                            DataTypeLength(DT_FLOAT32) * 3, // byte_stride
+                            0 );                            // byte_offset
 
-    const int32_t pos_att_id = mesh_builder.AddAttribute(draco::GeometryAttribute::POSITION, 3, draco::DT_FLOAT32);
+    // Add vertex to mesh (makes a copy internally)
+    int vert_att_id = mesh.AddAttribute(vert_att_template, true, vertex_count);
+    mesh.SetAttributeElementType(vert_att_id, MESH_VERTEX_ATTRIBUTE);
 
-    for (size_t f = 0; f < faces.shape()[0]; ++f)
+    // Get a reference to the mesh's copy of the vertex attribute
+    PointAttribute & vert_att = *(mesh.attribute(vert_att_id));
+
+    // Load the vertices into the vertex attribute
+    for (size_t vi = 0; vi < vertex_count; ++vi)
     {
-        auto vi0 = faces(f, 0);
-        auto vi1 = faces(f, 1);
-        auto vi2 = faces(f, 2);
-        
-        std::array<float, 3> v0{{ vertices(vi0, 0), vertices(vi0, 1), vertices(vi0, 2) }};
-        std::array<float, 3> v1{{ vertices(vi1, 0), vertices(vi1, 1), vertices(vi1, 2) }};
-        std::array<float, 3> v2{{ vertices(vi2, 0), vertices(vi2, 1), vertices(vi2, 2) }};
-        
-        mesh_builder.SetAttributeValuesForFace(
-            pos_att_id, draco::FaceIndex(f), v0.data(), v1.data(), v2.data() );
+        std::array<float, 3> v{{ vertices(vi, 0), vertices(vi, 1), vertices(vi, 2) }};
+        vert_att.SetAttributeValue(AttributeValueIndex(vi), v.data());
     }
-    std::unique_ptr<draco::Mesh> pMesh = mesh_builder.Finalize();
+    
+    // Load the faces
+    for (size_t f = 0; f < face_count; ++f)
+    {
+        Mesh::Face face = {{ PointIndex(faces(f, 0)),
+                             PointIndex(faces(f, 1)),
+                             PointIndex(faces(f, 2)) }};
+        
+        for (auto vi : face)
+        {
+            assert(vi < vertex_count && "face has an out-of-bounds vertex");
+        }
+        
+        mesh.SetFace(draco::FaceIndex(f), face);
+    }
 
     draco::EncoderBuffer buf;
     draco::Encoder encoder;
     encoder.SetSpeedOptions(DRACO_SPEED, DRACO_SPEED);
-    encoder.EncodeMeshToBuffer(*pMesh, &buf);
+    encoder.EncodeMeshToBuffer(mesh, &buf);
     
     return py::bytes(buf.data(), buf.size());
 }
