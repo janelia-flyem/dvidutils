@@ -34,6 +34,9 @@ endif()
 #include_directories(include)
 
 
+# Support deduplication in draco encoding.
+add_definitions("-DDRACO_ATTRIBUTE_DEDUPLICATION_SUPPORTED=1")
+
 #-------------------------------------------------------------------------------------------------------------------
 # Setup python bindings
 #-------------------------------------------------------------------------------------------------------------------
