@@ -132,15 +132,6 @@ py::bytes encode_faces_to_drc_bytes( vertices_array_t const & vertices,
         mesh.SetFace(draco::FaceIndex(f), face);
     }
     
-    int max_face = 0;
-    for (auto i = 0; i < mesh.num_faces(); ++i)
-    {
-        auto const & face = mesh.face(FaceIndex(i));
-        max_face = std::max(max_face, int(face[0].value()));
-        max_face = std::max(max_face, int(face[1].value()));
-        max_face = std::max(max_face, int(face[2].value()));
-    }
-    
     mesh.DeduplicateAttributeValues();
     mesh.DeduplicatePointIds();
     
@@ -199,19 +190,7 @@ std::tuple<vertices_array_t, normals_array_t, faces_array_t> decode_drc_bytes_to
     pMesh->DeduplicateAttributeValues();
     pMesh->DeduplicatePointIds();
 
-    // Extract faces
-    faces_array_t::shape_type faces_shape = {{pMesh->num_faces(), 3}};
-    faces_array_t faces(faces_shape);
-
-    for (auto i = 0; i < pMesh->num_faces(); ++i)
-    {
-        auto const & face = pMesh->face(FaceIndex(i));
-        faces(i, 0) = face[0].value();
-        faces(i, 1) = face[1].value();
-        faces(i, 2) = face[2].value();
-    }
-    
-    int vertex_count = 1 + xt::amax(faces)();
+    int point_count = pMesh->num_points();
     
     // Extract vertices
     const PointAttribute *const vertex_att = pMesh->GetNamedAttribute(GeometryAttribute::POSITION);
@@ -220,21 +199,21 @@ std::tuple<vertices_array_t, normals_array_t, faces_array_t> decode_drc_bytes_to
         throw std::runtime_error("Draco mesh appears to have no vertices.");
     }
     
-    vertices_array_t::shape_type verts_shape = {{vertex_count, 3}};
+    vertices_array_t::shape_type verts_shape = {{point_count, 3}};
     vertices_array_t vertices(verts_shape);
     
     std::array<float, 3> vertex_value;
-    for (size_t i = 0; i < vertex_count; ++i)
+    for (PointIndex i(0); i < point_count; ++i)
     {
-        if (!vertex_att->ConvertValue<float, 3>(vertex_att->mapped_index(PointIndex(i)), &vertex_value[0]))
+        if (!vertex_att->ConvertValue<float, 3>(vertex_att->mapped_index(i), &vertex_value[0]))
         {
             std::ostringstream ssErr;
-            ssErr << "Error reading vertex " << i << std::endl;
+            ssErr << "Error reading vertex " << i.value() << std::endl;
             throw std::runtime_error(ssErr.str());
         }
-        vertices(i, 0) = vertex_value[0];
-        vertices(i, 1) = vertex_value[1];
-        vertices(i, 2) = vertex_value[2];
+        vertices(i.value(), 0) = vertex_value[0];
+        vertices(i.value(), 1) = vertex_value[1];
+        vertices(i.value(), 2) = vertex_value[2];
     }
 
     // Extract normals (if any)
@@ -247,7 +226,7 @@ std::tuple<vertices_array_t, normals_array_t, faces_array_t> decode_drc_bytes_to
     else
     {
         // See Note below about why we don't use normal_att->size()
-        normal_count = vertex_count;
+        normal_count = point_count;
     }
     
     normals_array_t::shape_type normals_shape = {{normal_count, 3}};
@@ -260,21 +239,34 @@ std::tuple<vertices_array_t, normals_array_t, faces_array_t> decode_drc_bytes_to
         // Important:
         // We don't use normal_att->size(), because it might be smaller
         // than the number of vertices (if not all vertices had unique normals).
-        // Instead, we loop over the VERTEX indices, mapping from vertex point indices to normal entries.
-        for (size_t i(0); i < normal_count; ++i)
+        // Instead, we loop over the POINT indices, mapping from point indices to normal entries.
+        for (PointIndex i(0); i < normal_count; ++i)
         {
-            if (!normal_att->ConvertValue<float, 3>(normal_att->mapped_index(PointIndex(i)), &normal_value[0]))
+            if (!normal_att->ConvertValue<float, 3>(normal_att->mapped_index(i), &normal_value[0]))
             {
                 std::ostringstream ssErr;
                 ssErr << "Error reading normal for point " << i << std::endl;
                 throw std::runtime_error(ssErr.str());
             }
-            normals(i, 0) = normal_value[0];
-            normals(i, 1) = normal_value[1];
-            normals(i, 2) = normal_value[2];
+            normals(i.value(), 0) = normal_value[0];
+            normals(i.value(), 1) = normal_value[1];
+            normals(i.value(), 2) = normal_value[2];
         }
     }
+
+    // Extract faces
+    faces_array_t::shape_type faces_shape = {{pMesh->num_faces(), 3}};
+    faces_array_t faces(faces_shape);
     
+    for (auto i = 0; i < pMesh->num_faces(); ++i)
+    {
+        auto const & face = pMesh->face(FaceIndex(i));
+        faces(i, 0) = face[0].value();
+        faces(i, 1) = face[1].value();
+        faces(i, 2) = face[2].value();
+    }
+    
+
     return std::make_tuple( std::move(vertices), std::move(normals), std::move(faces) );
 }
 
