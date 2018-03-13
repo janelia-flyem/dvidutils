@@ -46,16 +46,55 @@ namespace dvidutils
         auto cls = py::class_<LabelMapper_t>(m, name.c_str());
         cls.def(py::init<xt::pyarray<domain_t>, xt::pyarray<codomain_t>>());
 
+
+        // Must provide overloads for all possible arguments,
+        // Because we want to allow the LabelMapper to be used with array types
+        // that don't happen to match the original domain/co-domain,
+        // without possibly truncating values in the allow_unmapped case.
+        
+        // not in-place
         cls.def("apply",
-                &LabelMapper_t::template apply<xt::pyarray<domain_t>>,
+                &LabelMapper_t::template apply<xt::pyarray<uint8_t>>,
+                "src"_a, "allow_unmapped"_a=false,
+                py::call_guard<py::gil_scoped_release>());
+
+        cls.def("apply",
+                &LabelMapper_t::template apply<xt::pyarray<uint16_t>>,
+                "src"_a, "allow_unmapped"_a=false,
+                py::call_guard<py::gil_scoped_release>());
+        
+        cls.def("apply",
+                &LabelMapper_t::template apply<xt::pyarray<uint32_t>>,
+                "src"_a, "allow_unmapped"_a=false,
+                py::call_guard<py::gil_scoped_release>());
+        
+        cls.def("apply",
+                &LabelMapper_t::template apply<xt::pyarray<uint64_t>>,
+                "src"_a, "allow_unmapped"_a=false,
+                py::call_guard<py::gil_scoped_release>());
+
+        // in-place
+        cls.def("apply_inplace",
+                &LabelMapper_t::template apply_inplace<xt::pyarray<uint8_t>>,
                 "src"_a, "allow_unmapped"_a=false,
                 py::call_guard<py::gil_scoped_release>());
 
         cls.def("apply_inplace",
-                &LabelMapper_t::template apply_inplace<xt::pyarray<domain_t>>,
+                &LabelMapper_t::template apply_inplace<xt::pyarray<uint16_t>>,
                 "src"_a, "allow_unmapped"_a=false,
                 py::call_guard<py::gil_scoped_release>());
 
+        cls.def("apply_inplace",
+                &LabelMapper_t::template apply_inplace<xt::pyarray<uint32_t>>,
+                "src"_a, "allow_unmapped"_a=false,
+                py::call_guard<py::gil_scoped_release>());
+        
+        cls.def("apply_inplace",
+                &LabelMapper_t::template apply_inplace<xt::pyarray<uint64_t>>,
+                "src"_a, "allow_unmapped"_a=false,
+                py::call_guard<py::gil_scoped_release>());
+        
+        
         // Add an overload for LabelMapper(), which is actually a function that returns
         // the appropriate LabelMapper type (e.g. LabelMapper_u64u32)
         m.def("LabelMapper", make_label_mapper<domain_t, codomain_t>, "domain"_a, "codomain"_a);

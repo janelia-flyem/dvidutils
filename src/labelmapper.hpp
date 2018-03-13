@@ -57,8 +57,8 @@ namespace dvidutils
             }
         }
 
-        template <typename domain_array_t>
-        codomain_array_t apply( domain_array_t const & src, bool allow_unmapped=false )
+        template <typename array_t>
+        codomain_array_t apply( array_t const & src, bool allow_unmapped=false )
         {
             auto res = codomain_array_t::from_shape(src.shape());
             _apply_impl(src, res, allow_unmapped);
@@ -75,15 +75,24 @@ namespace dvidutils
 
     private:
         
-        template <typename domain_array_t, typename codomain_array_t>
-        void _apply_impl( domain_array_t const & src, codomain_array_t & res, bool allow_unmapped=false )
+        template <typename input_array_t, typename output_array_t>
+        void _apply_impl( input_array_t const & src, output_array_t & res, bool allow_unmapped=false )
         {
+            typedef typename input_array_t::value_type input_dtype;
+            typedef typename output_array_t::value_type output_dtype;
+            
             // We assume the global mapping may be quite large,
             // but each input array apply() probably contains duplicate values.
             // Caching the mapping values found in src gives a ~10x speed boost.
-            mapping_t cached_mapping;
+            // The cached mapping type is based on the INPUT array dtypes (not the stored mapping dtypes)
             
-            auto lookup_voxel = [&](domain_t px) -> codomain_t {
+            // This cached mapping is stored in terms of the input/output arrays,
+            // because it will also store 'identity' entries.
+            typedef std::unordered_map<input_dtype, output_dtype> cached_mapping_t;
+
+            cached_mapping_t cached_mapping;
+            
+            auto lookup_voxel = [&](input_dtype px) -> output_dtype {
                 
                 auto cache_iter = cached_mapping.find(px);
                 if (cache_iter != cached_mapping.end())
@@ -102,7 +111,7 @@ namespace dvidutils
                 if (allow_unmapped)
                 {
                     // Key is missing. Return the original value.
-                    auto value = static_cast<typename codomain_array_t::value_type>(px);
+                    auto value = static_cast<output_dtype>(px);
                     cached_mapping[px] = value;
                     return value;
                 }
