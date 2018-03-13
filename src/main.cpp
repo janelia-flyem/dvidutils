@@ -94,9 +94,9 @@ namespace dvidutils
 
         )docu";
 
-        // FIXME: uint64_t cases won't work properly until xtensor-python #116 (second part) is fixed.
         export_label_mapper<uint64_t, uint64_t>(m);
         export_label_mapper<uint64_t, uint32_t>(m);
+        export_label_mapper<uint32_t, uint64_t>(m);
 
         export_label_mapper<uint32_t, uint32_t>(m);
         export_label_mapper<uint16_t, uint16_t>(m);

@@ -12,8 +12,10 @@ INT_DTYPES = [np.int8, np.int16, np.int32, np.int64]
  
 dtype_pairs = list(zip(UINT_DTYPES,UINT_DTYPES))
 dtype_pairs += [(np.uint64, np.uint32)] # Special case: Map uint64 down to uint32
+dtype_pairs += [(np.uint32, np.uint64)] # Special case: Map uint32 up to uint64
 params = list(product(dtype_pairs, [1,2,3]))
 ids = [f'{ndim}d-{dtype_in.__name__}-{dtype_out.__name__}' for ((dtype_in, dtype_out), ndim) in params]
+
 @pytest.fixture(params=params, ids=ids)
 def labelmapper_args(request):
     """
@@ -22,10 +24,6 @@ def labelmapper_args(request):
     """
     (dtype_in, dtype_out), ndim = request.param
     
-    # FIXME  
-    if (dtype_in, dtype_out) == (np.uint64, np.uint32):
-        pytest.skip("Skipping uint64-uint32 combo until xtensor-python #116 (second part) is fixed.")
-       
     mapping = {k: k+100 for k in range(10)}
     original = np.random.randint(0, 10, (3,)*ndim, dtype=dtype_in)
     expected = (original + 100).astype(dtype_out)
@@ -67,7 +65,6 @@ def test_LabelMapper_inplace(labelmapper_args):
     result = mapper.apply_inplace(remapped)
     assert result is None, "apply_inplace returns None"
  
-    assert remapped.dtype == expected.dtype, f"Wrong dtype: Expected {expected.dtype}, got {remapped.dtype}"
     assert remapped.shape == original.shape, f"Wrong shape: Expected {original.shape}, got {remapped.shape}"
     assert (remapped == expected).all(), f"Mapping was not applied correctly!"
 
