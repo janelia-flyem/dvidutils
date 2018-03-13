@@ -20,23 +20,6 @@ namespace dvidutils
     typedef float float32_t;
     typedef double float64_t;
 
-
-    template <typename R, typename T>
-    inline R cast_element(T x)
-    {
-        return static_cast<R>(x);
-    }
-
-    // Casts an xexpression to a different dtype
-    // https://github.com/QuantStack/xtensor-python/issues/116#issuecomment-339661536
-    template <typename result_value_type, typename xpr_t>
-    auto xcast(xpr_t && xpr)
-    {
-        auto cast = cast_element<result_value_type, typename xpr_t::value_type>;
-        return xt::vectorize(cast)(xpr);
-    }
-
-
     template <typename T> std::string dtype_short_name()  { return ""; }
     template <> std::string dtype_short_name<uint8_t>()   { return "u8"; }
     template <> std::string dtype_short_name<uint16_t>()  { return "u16"; }
