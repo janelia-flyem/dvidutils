@@ -30,8 +30,8 @@ namespace dvidutils
     template <> std::string dtype_short_name<int32_t>()  { return "i32"; }
     template <> std::string dtype_short_name<int64_t>()  { return "i64"; }
 
-    template <> std::string dtype_short_name<float>()  { return "i32"; static_assert(sizeof(float) == 4, "Unknown architecture"); }
-    template <> std::string dtype_short_name<double>()  { return "i64"; static_assert(sizeof(double) == 8, "Unknown architecture"); }
+    template <> std::string dtype_short_name<float>()  { return "f32"; static_assert(sizeof(float) == 4, "Unknown architecture"); }
+    template <> std::string dtype_short_name<double>()  { return "f64"; static_assert(sizeof(double) == 8, "Unknown architecture"); }
 
     template<typename T1, typename T2>
     std::string dtype_pair_name()
