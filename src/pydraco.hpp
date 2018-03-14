@@ -183,6 +183,13 @@ std::tuple<vertices_array_t, normals_array_t, faces_array_t> decode_drc_bytes_to
     
     // Decode to Mesh
     Decoder decoder;
+    
+    auto geometry_type = decoder.GetEncodedGeometryType(&buf).value();
+    if (geometry_type != TRIANGULAR_MESH)
+    {
+        throw std::runtime_error("Buffer does not appear to be a mesh file. (Is it a pointcloud?)");
+    }
+    
     auto pMesh = decoder.DecodeMeshFromBuffer(&buf).value();
     
     // Strangely, encoding a mesh may cause it to have duplicate point ids,

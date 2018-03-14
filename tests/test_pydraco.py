@@ -8,11 +8,24 @@ from dvidutils import encode_faces_to_drc_bytes, decode_drc_bytes_to_faces
 import faulthandler
 faulthandler.enable()
 
+def test_decode_invalid():
+    bogus_data = b"This ain't a mesh file!"
+    try:
+        decode_drc_bytes_to_faces(bogus_data)
+    except RuntimeError:
+        pass
+    else:
+        raise RuntimeError("Expected an exception, but didn't see one!")
+
+
 def test_empty():
     vertices = np.zeros((0,3), np.float32)
     normals = np.zeros((0,3), np.float32)
     faces = np.zeros((0,3), np.uint32)
     drc_bytes = encode_faces_to_drc_bytes(vertices, normals, faces)
+    
+    assert drc_bytes == b'', "Expected an empty buffer for an empty mesh (as a special case)"
+    
     rt_vertices, rt_normals, rt_faces = decode_drc_bytes_to_faces(drc_bytes)
     assert rt_vertices.shape == (0,3)
     assert rt_normals.shape == (0,3)
