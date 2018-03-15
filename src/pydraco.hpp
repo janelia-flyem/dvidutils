@@ -23,7 +23,13 @@ typedef xt::pytensor<float, 2> vertices_array_t;
 typedef xt::pytensor<float, 2> normals_array_t;
 typedef xt::pytensor<uint32_t, 2> faces_array_t;
 
-int DRACO_SPEED = 0; // Best compression. See encode.h
+
+// Defaults from the draco_encoder command-line tool.
+int DEFAULT_COMPRESSION_LEVEL = 7;
+int DEFAULT_POSITION_QUANTIZATION_BITS = 14;
+int DEFAULT_NORMAL_QUANTIZATION_BITS = 10;
+int DEFAULT_GENERIC_QUANTIZATION_BITS = 8;
+
 
 // Encode the given vertices and faces arrays from python
 // into a buffer (bytes object) encoded via draco.
@@ -34,7 +40,11 @@ int DRACO_SPEED = 0; // Best compression. See encode.h
 // Note: The vertices are expected to be passed in X,Y,Z order
 py::bytes encode_faces_to_drc_bytes( vertices_array_t const & vertices,
                                      normals_array_t const & normals,
-                                     faces_array_t const & faces )
+                                     faces_array_t const & faces,
+                                     int compression_level,
+                                     int position_quantization_bits,
+                                     int normal_quantization_bits,
+                                     int generic_quantization_bits)
 {
     using namespace draco;
 
@@ -135,11 +145,16 @@ py::bytes encode_faces_to_drc_bytes( vertices_array_t const & vertices,
     mesh.DeduplicateAttributeValues();
     mesh.DeduplicatePointIds();
     
-    draco::EncoderBuffer buf;
     draco::Encoder encoder;
-    encoder.SetSpeedOptions(DRACO_SPEED, DRACO_SPEED);
+
+    int speed = 10 - compression_level;
+    encoder.SetSpeedOptions(speed, speed);
+    encoder.SetAttributeQuantization(draco::GeometryAttribute::POSITION, position_quantization_bits);
+    encoder.SetAttributeQuantization(draco::GeometryAttribute::NORMAL,   normal_quantization_bits);
+    encoder.SetAttributeQuantization(draco::GeometryAttribute::GENERIC,  generic_quantization_bits);
+
+    draco::EncoderBuffer buf;
     encoder.EncodeMeshToBuffer(mesh, &buf);
-    
     return py::bytes(buf.data(), buf.size());
 }
 

@@ -148,9 +148,17 @@ namespace dvidutils
 
         m.def("remap_duplicates", &remap_duplicates<xt::pytensor<float, 2>, xt::pytensor<uint32_t, 2>>, "vertices"_a, py::call_guard<py::gil_scoped_release>());
         
-        m.def("encode_faces_to_drc_bytes", encode_faces_to_drc_bytes, "vertices"_a, "normals"_a, "faces"_a);
+        m.def("encode_faces_to_drc_bytes",
+              &encode_faces_to_drc_bytes, // <-- Wow, that's an important '&' character.  If omitted, it causes segfaults during DECODE???
+              "vertices"_a,
+              "normals"_a,
+              "faces"_a,
+              "compression_level"_a=DEFAULT_COMPRESSION_LEVEL,
+              "position_quantization_bits"_a=DEFAULT_POSITION_QUANTIZATION_BITS,
+              "normal_quantization_bits"_a=DEFAULT_NORMAL_QUANTIZATION_BITS,
+              "generic_quantization_bits"_a=DEFAULT_GENERIC_QUANTIZATION_BITS);
     
-        m.def("decode_drc_bytes_to_faces", decode_drc_bytes_to_faces, "drc_bytes"_a);
+        m.def("decode_drc_bytes_to_faces", &decode_drc_bytes_to_faces, "drc_bytes"_a);
 
     }
 }

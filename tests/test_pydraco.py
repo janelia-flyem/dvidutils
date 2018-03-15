@@ -59,8 +59,10 @@ def _hexagon_roundtrip(normals_set):
     elif normals_set == 'unique':
         # fake 'normals' for this test
         normals = vertices + 10
+        normals /= np.linalg.norm(normals, axis=1)[:,None]
     elif normals_set == 'nonunique':
         normals = np.ones_like(vertices)
+        normals /= np.linalg.norm(normals, axis=1)[:,None]
     else:
         raise RuntimeError("bad normals_set option")
     
@@ -73,7 +75,11 @@ def _hexagon_roundtrip(normals_set):
 
     faces = np.asarray(faces, dtype=np.uint32)
     
-    drc_bytes = encode_faces_to_drc_bytes(vertices[:,::-1], normals[:,::-1], faces) # ZYX -> XYZ
+    # verts/norms: ZYX -> XYZ
+    drc_bytes = encode_faces_to_drc_bytes(vertices[:,::-1], normals[:,::-1], faces,
+                                          normal_quantization_bits=14) # Must use better than default normals quantization, or comparisons
+                                                                       # in this test will fail (rounding to nearest .1 isn't enough).
+
     rt_vertices, rt_normals, rt_faces = decode_drc_bytes_to_faces(drc_bytes)
     rt_vertices = rt_vertices[:,::-1] # XYZ -> ZYX
     rt_normals = rt_normals[:,::-1] # XYZ -> ZYX
@@ -91,10 +97,14 @@ def test_random_roundtrip():
     vertices[:,1] = np.random.choice(list(range(10)), size=(10,))
     vertices[:,2] = np.random.choice(list(range(10)), size=(10,))
   
+    # These 'normals' are totally fake
     normals = np.zeros((10,3), dtype=np.float32)
     normals[:,0] = np.random.choice(list(range(10)), size=(10,))
     normals[:,1] = np.random.choice(list(range(10)), size=(10,))
     normals[:,2] = np.random.choice(list(range(10)), size=(10,))
+    
+    # ...but they must still have magnitude == 1.0
+    normals /= np.linalg.norm(normals, axis=1)[:,None]
     
     # Choose carefully to ensure no degenerate faces
     faces = np.zeros((100,3), dtype=np.uint32)
@@ -107,7 +117,9 @@ def test_random_roundtrip():
  
     #print(f"\nEncoding {len(vertices)} verts, {len(normals)} norms, {len(faces)} faces\n")
  
-    drc_bytes = encode_faces_to_drc_bytes(vertices, normals, faces)
+    # Must use better than default normals quantization, or comparisons
+    # in this test will fail (rounding to nearest .1 isn't enough).
+    drc_bytes = encode_faces_to_drc_bytes(vertices, normals, faces, normal_quantization_bits=14)
     rt_vertices, rt_normals, rt_faces = decode_drc_bytes_to_faces(drc_bytes)
       
     #print(f"\nGot {len(rt_vertices)} verts, {len(rt_normals)} norms, {len(rt_faces)} faces\n")
@@ -116,17 +128,29 @@ def test_random_roundtrip():
 
 
 def _compare(vertices, normals, faces, rt_vertices, rt_normals, rt_faces, check_normals): 
+    # Draco compression involves dropping some bits during quantization
+    # For comparisons, we need to round the results.
+    vertices = np.round(vertices, 2)
+    normals = np.round(normals, 2)
+    rt_vertices = np.round(rt_vertices, 2)
+    rt_normals = np.round(rt_normals, 2)
+
     # Vertexes are easy to check -- just sort first.
     sorted_verts = np.asarray((sorted(vertices.tolist())))
     sorted_rt_verts = np.asarray((sorted(rt_vertices.tolist())))
 
     sorted_norms = np.asarray((sorted(normals.tolist())))
     sorted_rt_norms = np.asarray((sorted(rt_normals.tolist())))
-
+    
 #     print('')
 #     print(sorted_verts)
 #     print('--------------')
 #     print(sorted_rt_verts)
+
+#     print('')
+#     print(sorted_norms)
+#     print('--------------')
+#     print(sorted_rt_norms)
 
     assert set(map(tuple, sorted_verts)) == set(map(tuple, sorted_rt_verts))
     assert set(map(tuple, sorted_norms)) == set(map(tuple, sorted_rt_norms))
