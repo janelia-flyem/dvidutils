@@ -27,7 +27,7 @@ requirements:
   run:
     - python {{PY_VER}}*
     - numpy {{NPY_VER}}*
-    - draco 1.0.1
+    - draco 1.2.5
 
 test:
   requires:
