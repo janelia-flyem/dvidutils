@@ -92,6 +92,8 @@ def _hexagon_roundtrip(normals_set):
     
 
 def test_random_roundtrip():
+    np.random.seed(0) # Force deterministic testing.
+    
     vertices = np.zeros((10,3), dtype=np.float32)
     vertices[:,0] = np.random.choice(list(range(10)), size=(10,))
     vertices[:,1] = np.random.choice(list(range(10)), size=(10,))
