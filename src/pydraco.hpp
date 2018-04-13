@@ -36,7 +36,6 @@ int DEFAULT_GENERIC_QUANTIZATION_BITS = 8;
 //
 // Special case: If faces is empty, an empty buffer is returned.
 //
-// Note: No support for vertex normals.
 // Note: The vertices are expected to be passed in X,Y,Z order
 py::bytes encode_faces_to_drc_bytes( vertices_array_t const & vertices,
                                      normals_array_t const & normals,
@@ -164,7 +163,6 @@ py::bytes encode_faces_to_drc_bytes( vertices_array_t const & vertices,
 //
 // Special case: If drc_bytes is empty, return empty vertices and faces.
 //
-// Note: normals are not decoded (currently)
 // Note: The vertexes are returned in X,Y,Z order.
 std::tuple<vertices_array_t, normals_array_t, faces_array_t> decode_drc_bytes_to_faces( py::bytes const & drc_bytes )
 {

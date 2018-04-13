@@ -123,7 +123,6 @@ def test_larger_dtype():
     remapped = original.copy()
     mapper.apply_inplace(remapped, allow_unmapped=True)
     assert (remapped == expected).all()
-    
 
 if __name__ == "__main__":
     pytest.main()
