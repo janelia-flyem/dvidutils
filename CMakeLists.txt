@@ -80,6 +80,15 @@ add_custom_target(dvidutils
 add_dependencies(dvidutils _dvidutils)
 
 #
+# Tests
+#
+find_program(PYTEST_EXECUTABLE pytest)
+add_custom_target(pytests
+     COMMAND "PYTHONPATH=${DVIDUTILS_BUILD_OUTPUT_DIR}" "${PYTEST_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/tests"
+)
+add_dependencies(pytests dvidutils)
+
+#
 # INSTALL
 #
 # python sources first
