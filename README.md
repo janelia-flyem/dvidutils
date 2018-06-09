@@ -1,3 +1,5 @@
+[![Travis CI Status](https://travis-ci.org/stuarteberg/dvidutils.svg?branch=master)](https://travis-ci.org/stuarteberg/dvidutils)
+
 dvidutils
 =========
 
