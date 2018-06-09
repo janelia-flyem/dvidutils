@@ -44,6 +44,7 @@ def test_LabelMapper(labelmapper_args):
     assert remapped.shape == original.shape, f"Wrong shape: Expected {original.shape}, got {remapped.shape}"
     assert (remapped == expected).all(), f"Mapping was not applied correctly!"
 
+
 def test_LabelMapper_allow_unmapped(labelmapper_args):
     original, expected, mapping, domain, codomain = labelmapper_args
 
@@ -56,6 +57,20 @@ def test_LabelMapper_allow_unmapped(labelmapper_args):
     assert remapped.dtype == expected.dtype, f"Wrong dtype: Expected {expected.dtype}, got {remapped.dtype}"
     assert remapped.shape == original.shape, f"Wrong shape: Expected {original.shape}, got {remapped.shape}"
     assert (remapped == expected).all(), f"Mapping was not applied correctly!"
+
+def test_LabelMapper_with_default(labelmapper_args):
+    original, expected, mapping, domain, codomain = labelmapper_args
+
+    original.flat[0] = 127 # Not in the mapping
+    expected.flat[0] = 115 # Default value (below)
+
+    mapper = LabelMapper(domain, codomain)
+    remapped = mapper.apply_with_default(original, 115)
+
+    assert remapped.dtype == expected.dtype, f"Wrong dtype: Expected {expected.dtype}, got {remapped.dtype}"
+    assert remapped.shape == original.shape, f"Wrong shape: Expected {original.shape}, got {remapped.shape}"
+    assert (remapped == expected).all(), f"Mapping was not applied correctly!"
+
 
 def test_LabelMapper_inplace(labelmapper_args):
     original, expected, mapping, domain, codomain = labelmapper_args

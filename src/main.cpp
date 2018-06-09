@@ -94,6 +94,27 @@ namespace dvidutils
                 "src"_a, "allow_unmapped"_a=false,
                 py::call_guard<py::gil_scoped_release>());
         
+        // with-default
+        cls.def("apply_with_default",
+                &LabelMapper_t::template apply_with_default<xt::pyarray<uint8_t>>,
+                "src"_a, "default"_a=0,
+                py::call_guard<py::gil_scoped_release>());
+        
+        cls.def("apply_with_default",
+                &LabelMapper_t::template apply_with_default<xt::pyarray<uint16_t>>,
+                "src"_a, "default"_a=0,
+                py::call_guard<py::gil_scoped_release>());
+        
+        cls.def("apply_with_default",
+                &LabelMapper_t::template apply_with_default<xt::pyarray<uint32_t>>,
+                "src"_a, "default"_a=0,
+                py::call_guard<py::gil_scoped_release>());
+        
+        cls.def("apply_with_default",
+                &LabelMapper_t::template apply_with_default<xt::pyarray<uint64_t>>,
+                "src"_a, "default"_a=0,
+                py::call_guard<py::gil_scoped_release>());
+        
         
         // Add an overload for LabelMapper(), which is actually a function that returns
         // the appropriate LabelMapper type (e.g. LabelMapper_u64u32)

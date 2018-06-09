@@ -61,22 +61,30 @@ namespace dvidutils
         codomain_array_t apply( array_t const & src, bool allow_unmapped=false )
         {
             auto res = codomain_array_t::from_shape(src.shape());
-            _apply_impl(src, res, allow_unmapped);
+            _apply_impl(src, res, allow_unmapped, 0, false);
             return res;
         }
 
+        template <typename array_t>
+        codomain_array_t apply_with_default( array_t const & src, typename array_t::value_type default_value=0 )
+        {
+            auto res = codomain_array_t::from_shape(src.shape());
+            _apply_impl(src, res, true, default_value, true);
+            return res;
+        }
         // FIXME: It would be nice to figure out how to allow unified function
         //        signatures that handle in-place and non-in-place calls...
         template <typename array_t>
         void apply_inplace( array_t & src, bool allow_unmapped=false )
         {
-            _apply_impl(src, src, allow_unmapped);
+            _apply_impl(src, src, allow_unmapped, 0, false);
         }
 
     private:
         
         template <typename input_array_t, typename output_array_t>
-        void _apply_impl( input_array_t const & src, output_array_t & res, bool allow_unmapped=false )
+        void _apply_impl( input_array_t const & src, output_array_t & res, bool allow_unmapped,
+                         typename output_array_t::value_type default_value, bool use_default )
         {
             typedef typename input_array_t::value_type input_dtype;
             typedef typename output_array_t::value_type output_dtype;
@@ -110,8 +118,13 @@ namespace dvidutils
                 
                 if (allow_unmapped)
                 {
-                    // Key is missing. Return the original value.
-                    auto value = static_cast<output_dtype>(px);
+                    // Key is missing.
+                    // Return the original value or the default value, depending on use_default.
+                    auto value = default_value;
+                    if (!use_default)
+                    {
+                        value = static_cast<output_dtype>(px);
+                    }
                     cached_mapping[px] = value;
                     return value;
                 }
