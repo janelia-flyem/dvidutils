@@ -60,8 +60,28 @@ FIND_PACKAGE(Boost REQUIRED COMPONENTS container)
 include_directories(AFTER ${Boost_INCLUDE_DIR})
 
 #-------------------------------------------------------------------------------------------------------------------
-# Add The module
+# Add the package
 #-------------------------------------------------------------------------------------------------------------------
-pybind11_add_module(dvidutils src/main.cpp) # Also locates Python, so we can use e.g. PYTHON_SITE_PACKAGES
-target_link_libraries(dvidutils PRIVATE libdraco.a libdracoenc.a libdracodec.a)
-install(TARGETS dvidutils LIBRARY DESTINATION "${PYTHON_SITE_PACKAGES}")
+
+set(DVIDUTILS_BUILD_OUTPUT_DIR "${CMAKE_BINARY_DIR}/$<CONFIG>")
+set(DVIDUTILS_PACKAGE "${DVIDUTILS_BUILD_OUTPUT_DIR}/dvidutils")
+
+# Target for the compiled module -- install to <build-dir>/dvidutils/_dvidutils.XXX
+pybind11_add_module(_dvidutils src/main.cpp) # Also locates Python, so we can use e.g. PYTHON_SITE_PACKAGES
+target_link_libraries(_dvidutils PRIVATE libdraco.a libdracoenc.a libdracodec.a)
+set_target_properties(_dvidutils PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${DVIDUTILS_PACKAGE}")
+
+# Target to copy the python sources to the build output
+add_custom_target(dvidutils
+     ALL
+     COMMAND mkdir -p "${DVIDUTILS_PACKAGE}"
+     COMMAND cp -r "${CMAKE_SOURCE_DIR}/dvidutils/*" "${DVIDUTILS_PACKAGE}/"
+)
+add_dependencies(dvidutils _dvidutils)
+
+#
+# INSTALL
+#
+# python sources first
+install(DIRECTORY "${DVIDUTILS_PACKAGE}" DESTINATION "${PYTHON_SITE_PACKAGES}")
+

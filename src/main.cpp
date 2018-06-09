@@ -117,7 +117,7 @@ namespace dvidutils
         throw std::runtime_error(ss.str());
     }
 
-    PYBIND11_MODULE(dvidutils, m) // note: PYBIND11_MODULE requires pybind11 >= 2.2.0
+    PYBIND11_MODULE(_dvidutils, m) // note: PYBIND11_MODULE requires pybind11 >= 2.2.0
     {
         xt::import_numpy();
 
