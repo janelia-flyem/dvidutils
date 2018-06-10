@@ -13,8 +13,16 @@ source:
 build:
   number: 0
 
+  # By default, gcc-5+ can't be used if we intend to link with
+  # packages that were produced with lower versions of gcc.
+  # We must explicitly tell gcc to use the old libstdc++ ABI.
+  # (for instance, our draco package).
+  script_env:                     # [linux]
+    - DO_NOT_BUILD_WITH_CXX11_ABI # [linux]
+
 requirements:
   build:
+    - gxx_linux-64 # [linux]
     - cmake
     - python >=3.6,{{PY_VER}}*
     - numpy {{NPY_VER}}* # To avoid runtime errors about the numpy ABI
@@ -23,7 +31,6 @@ requirements:
     - pybind11 >=2.2.1 # Required for call_guard
     - draco 1.0.1
     - boost
-
   run:
     - python {{PY_VER}}*
     - numpy {{NPY_VER}}*
