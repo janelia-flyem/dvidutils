@@ -36,4 +36,4 @@ install:
   - conda info -a
 
 script:
-  conda build conda-recipe
+  DO_NOT_BUILD_WITH_CXX11_ABI=1 conda build conda-recipe
