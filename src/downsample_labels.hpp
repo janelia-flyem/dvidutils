@@ -87,6 +87,9 @@ namespace dvidutils {
                         xt::eval(xt::vectorize([&](label_t label) { counts[label] += 1; return 0;})(block));
                         
                         // Find the maximum count
+                        // Note: This function guarantees that ties are resolved in favor of the lower value.
+                        //       Since flat_map is ordered, and max_element chooses the first tied value,
+                        //       we're in compliance with that guarantee.
                         auto max_pair = counts.begin();
                         if (suppress_zero)
                         {
@@ -146,6 +149,9 @@ namespace dvidutils {
                     xt::eval(xt::vectorize([&](label_t label) { counts[label] += 1; return 0;})(block));
                     
                     // Find the maximum count
+                    // Note: This function guarantees that ties are resolved in favor of the lower value.
+                    //       Since flat_map is ordered, and max_element chooses the first tied value,
+                    //       we're in compliance with that guarantee.
                     auto max_pair = counts.begin();
                     if (suppress_zero)
                     {

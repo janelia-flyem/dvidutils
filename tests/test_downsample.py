@@ -16,8 +16,8 @@ def test_downsample_labels_2D():
          [0,0, 8,9, 8,9, 8,9]]
     #           ^
     #           |
-    #           `-- Undefined in the suppress_zero case:
-    #               Could end up as either 8 or 9 (since there's one of each)
+    #           `-- In the suppress_zero case, we choose the LOWER
+    #               of the two tied values (in this case, 8).
 
     a = np.array(a)
     a_copy = a.copy()
@@ -30,11 +30,8 @@ def test_downsample_labels_2D():
     d = downsample_labels(a, 2, suppress_zero=True)
     assert (a == a_copy).all(), "input was overwritten!"
     
-    assert d[1,1] in (8,9) # See note above
-    d[1,1] = 9 # Overwrite to ensure deterministic check
-    
     assert (d == [[0, 1, 2, 3],
-                  [0, 9, 2, 3]]).all()
+                  [0, 8, 2, 3]]).all()
 
 
 def test_downsample_labels_3D():
@@ -55,11 +52,29 @@ def test_downsample_labels_3D():
     assert (a == a_copy).all(), "input was overwritten!"
     assert (d == [[[2, 3]]]).all()
 
+
 def test_input_doesnt_change():
     a = np.zeros((64,64,64), dtype=np.uint32)
     d = downsample_labels(a, 2, suppress_zero=False)
     
     assert a.shape == (64,64,64), "Shape of a changed!"
+
+
+def test_downsample_with_ties():
+    """
+    In the event of a tie between two voxels,
+    we choose the lesser of the two values
+    (or lesser of four values).
+    """
+    a = [[1,1, 3,0, 2,3],
+         [2,2, 3,0, 1,0]]
+    
+    d = downsample_labels(a, 2)
+    assert (d == [[1, 0, 0]]).all()
+
+    d = downsample_labels(a, 2, suppress_zero=True)
+    assert (d == [[1, 3, 1]]).all()
+
 
 if __name__ == "__main__":
     pytest.main()
