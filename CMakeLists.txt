@@ -79,6 +79,13 @@ add_custom_target(dvidutils
 )
 add_dependencies(dvidutils _dvidutils)
 
+##
+## Destripe test utiltity
+##
+add_executable(destripe src/destripe.cpp src/pngutils.cpp)
+target_link_libraries(destripe PRIVATE libpng.dylib)
+
+
 #
 # Tests
 #
