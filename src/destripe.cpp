@@ -55,7 +55,7 @@ vector<uint8> destripe(uint8 * image, size_t w, size_t h, size_t YC, vector<int>
     size_t NS = seam.size();
     printf("%d seams\n", int(NS));
 
-    if (seam[0] != -1 or seam[NS-1] != w) {
+    if (seam[0] != -1 or seam[NS-1] != int(w)) {
         throw std::runtime_error("seam definitions must start with -1 and end with the image width!");
     }
 
@@ -138,20 +138,20 @@ vector<uint8> destripe(uint8 * image, size_t w, size_t h, size_t YC, vector<int>
     // Find the corrections.  Put the X loop on the outside, even though that's bad for the cache, since the X computation is more expensive.
     vector<uint8> fake(w*h, 127);
     double yslot = double(h)/YC;
-    for(size_t x=0; x<w; x++) {
+    for(int x=0; x<int(w); x++) {
         // find the x bin.  May not exist since exact seams don't count
         size_t ix;
         for(ix = 0; ix < XSIZE-1; ix++)
-            if (x > size_t(seam[ix]) && x < size_t(seam[ix+1]))
+            if (x > seam[ix] && x < seam[ix+1])
                 break;
 
         if (ix >= XSIZE-1) {// found nothing.  Just copy this column.  Fix the case where it's black, since Shinya prefers white.
             printf("No X at %d\n", int(x));
             for(size_t y=0; y<h; y++) {
-                uint8 pix = image[x+y*w];
-                if (pix == 0 && (image[x-1+y*w] != 0 || image[x+1+y*w] != 0)) // if not in a completely black area
+                uint8 pix = image[x+int(y*w)];
+                if (pix == 0 && (image[size_t(x)+y*w-1] != 0 || image[size_t(x)+y*w+1] != 0)) // if not in a completely black area
                     pix = 225;  // Set to a very white value
-                fake[x+y*w] = pix;
+                fake[size_t(x)+y*w] = pix;
             }
             continue;
         }
@@ -173,11 +173,11 @@ vector<uint8> destripe(uint8 * image, size_t w, size_t h, size_t YC, vector<int>
 
             int delta = incr >= 0 ? int(incr + 0.5) : int(incr - 0.5);  // round to integer
 
-            int pix = int(image[x+y*w]) + delta;
+            int pix = int(image[size_t(x)+y*w]) + delta;
             //pix = 127 + delta;  // just testing
             pix = min(pix, 255);
             pix = max(pix,   0);
-            fake[size_t(x+y*w)] = static_cast<uint8>(pix);
+            fake[size_t(x)+y*w] = static_cast<uint8>(pix);
         }
     }
 
