@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <math.h>
 #include <vector>
+#include <stdexcept>
 
 #include "destripe.hpp"
 
