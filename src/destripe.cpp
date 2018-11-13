@@ -1,15 +1,16 @@
+#include "destripe.hpp"
+
 #include <cstdio>
 #include <cstdlib>
 #include <math.h>
-        
 #include <vector>
 
-#include "pngutils.hpp"
+#include "destripe.hpp"
 
 using namespace std;
 
-vector<uint8> destripe(uint8 * image, size_t w, size_t h, size_t YC);
-
+typedef uint8_t uint8;
+int ROUND(double x) {return x >= 0 ? int(x+0.5) : int (x-0.5);}
 
 class MeanStd {  // for computing mean and standard deviation
 public:
@@ -27,8 +28,6 @@ private:
     double sum, sum2;
     long int n;  // could average more the 2B elements, so need long
 };
-typedef unsigned char uint8;
-
 
 struct Correction {
 public:
@@ -36,38 +35,8 @@ public:
     Correction(){ left = 0.0; right = 0.0;}
 };
 
-int ROUND(double x) {return x >= 0 ? int(x+0.5) : int (x-0.5);}
 
-int main(int argc, char **argv) {
-    
-    vector<char *> noa;    // all non-option arguments
-    bool debug = false;  // product debug images
-    for(int i=1; i<argc; i++) {
-        if (argv[i][0] != '-')
-            noa.push_back(argv[i]);
-        else if (strcasecmp(argv[i], "-d") == 0)
-            debug = true;
-        else {
-            printf("Unknown option %s\n", argv[i]);
-            return 42;
-        }
-    }
-    if (noa.size() < 2) {
-        printf("Usage:  Destripe [-d] <input file> <output file>\n");
-        return 42;
-    }
-    int w, h;
-    uint8 *image = read_8bit_png_file(noa[0], w, h);
-    printf("opened '%s', w=%d h=%d\n", noa[0], w, h);
-
-    size_t YC = size_t(h)/1000;
-    auto output = destripe(image, size_t(w), size_t(h), YC);
-    
-    printf("Output file is '%s', %d x %d\n", noa[1], w, h);
-    write_8bit_png_file(noa[1], &output[0], w, h);
-}
-
-vector<uint8> destripe(uint8 * image, size_t w, size_t h, size_t YC)
+vector<uint8> destripe(uint8 * image, size_t w, size_t h, size_t YC, vector<int> const & seam, bool writeplot)
 {
 
     printf("%d measurement points in Y\n", int(YC));
@@ -80,27 +49,34 @@ vector<uint8> destripe(uint8 * image, size_t w, size_t h, size_t YC)
         printf("ys[%2d] = %5d\n", int(i), ys[i]);
     }
     // here are the X values of the seams.  Also two at ends.
-    int seam[] = {-1, 2066,4684,7574,10385,13222,15937,18531,21198,23826,26506,29175,31772, int(w)};
-    size_t NS = sizeof(seam)/sizeof(int);
+    //int seam[] = {-1, 2066,4684,7574,10385,13222,15937,18531,21198,23826,26506,29175,31772, int(w)};
+    //size_t NS = sizeof(seam)/sizeof(int);
+
+    size_t NS = seam.size();
     printf("%d seams\n", int(NS));
-    
+
+    if (seam[0] != -1 or seam[NS-1] != w) {
+        throw std::runtime_error("seam definitions must start with -1 and end with the image width!");
+    }
+
     // look at normalizing through one section.   First make plot
     vector<double> means_by_col(w);
 
-    FILE *fp = fopen("pl", "w");
-    if (fp == nullptr) {
-        throw std::runtime_error("Could not open 'pl'\n");
+    if (writeplot) {
+        FILE *fp = fopen("pl", "w");
+        if (fp == nullptr) {
+            throw std::runtime_error("Could not open 'pl'\n");
+        }
+        for(size_t x=0; x<w; x++) {
+            MeanStd m;
+            for(size_t y=0; y<h; y++)
+                m.Element(image[x+y*w]);
+            fprintf(fp, "%d %.2f %.2f\n", int(x), m.Mean(), m.Std() );
+            means_by_col[x] = m.Mean();
+        }
+        fclose(fp);
+        printf("Wrote file 'fp'\n");
     }
-    for(size_t x=0; x<w; x++) {
-        MeanStd m;
-        for(size_t y=0; y<h; y++)
-            m.Element(image[x+y*w]);
-        fprintf(fp, "%d %.2f %.2f\n", int(x), m.Mean(), m.Std() );
-        means_by_col[x] = m.Mean();
-    }
-    fclose(fp);
-    printf("Wrote file 'fp'\n");
-
 
     for(size_t i=0; i<NS-1; i++) {
         size_t xmin = static_cast<size_t>(max(seam[i]+1, 0));
@@ -119,15 +95,15 @@ vector<uint8> destripe(uint8 * image, size_t w, size_t h, size_t YC)
             }
         }
     }
-    
+
     // Create an array of corrections.  It's unevenly spaced in X and Y, but with a constant number of points in each row/column.
     // Two extra points in each direction; one at 0 and one at the far edge.  All measured points are interior.
-    
+
     size_t XSIZE = NS;
     size_t YSIZE = YC+2;
     vector<vector<Correction>  >corr(XSIZE, vector<Correction>(YSIZE));
     printf("Correction vector has %lu entries, %lu by %lu\n", corr.size(), XSIZE, YSIZE);
-    
+
     for(size_t i=1; i<NS-1; i++) {
         int xmid = seam[i];
         const int DX = 10;
@@ -158,6 +134,7 @@ vector<uint8> destripe(uint8 * image, size_t w, size_t h, size_t YC)
             printf("%5.1f:%5.1f ", corr[x][y].left, corr[x][y].right);
         printf("\n");
     }
+
     // Find the corrections.  Put the X loop on the outside, even though that's bad for the cache, since the X computation is more expensive.
     vector<uint8> fake(w*h, 127);
     double yslot = double(h)/YC;
@@ -167,6 +144,7 @@ vector<uint8> destripe(uint8 * image, size_t w, size_t h, size_t YC)
         for(ix = 0; ix < XSIZE-1; ix++)
             if (x > size_t(seam[ix]) && x < size_t(seam[ix+1]))
                 break;
+
         if (ix >= XSIZE-1) {// found nothing.  Just copy this column.  Fix the case where it's black, since Shinya prefers white.
             printf("No X at %d\n", int(x));
             for(size_t y=0; y<h; y++) {
@@ -184,6 +162,7 @@ vector<uint8> destripe(uint8 * image, size_t w, size_t h, size_t YC)
             // check
             if (int(y) < ys[slot] || int(y) > ys[slot+1])
                 printf("Oops.  yslot %f, slot %d, ys %d %d\n", yslot, int(slot), ys[slot], ys[slot+1]);
+
             // OK, interpolate
             double beta = (double(y) - ys[slot])/(ys[slot+1] - ys[slot]);
 
@@ -201,6 +180,6 @@ vector<uint8> destripe(uint8 * image, size_t w, size_t h, size_t YC)
             fake[size_t(x+y*w)] = static_cast<uint8>(pix);
         }
     }
-    
+
     return fake;
 }
