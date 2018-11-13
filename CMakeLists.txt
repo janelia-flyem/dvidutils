@@ -81,9 +81,9 @@ add_dependencies(dvidutils _dvidutils)
 
 
 ##
-## Destripe test utiltity
+## Destripe test utility -- not processed by 'make install'
 ##
-add_executable(destripe_main src/destripe_main.cpp src/destripe.cpp src/pngutils.cpp)
+add_executable(destripe_main EXCLUDE_FROM_ALL src/destripe_main.cpp src/destripe.cpp src/pngutils.cpp)
 target_link_libraries(destripe_main PRIVATE libpng.dylib)
 
 

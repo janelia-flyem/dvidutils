@@ -21,5 +21,5 @@ cmake .. \
     -DCMAKE_INSTALL_PREFIX=${PREFIX} \
 ##
 
-make -j${CPU_COUNT}
+make -j${CPU_COUNT} dvidutils
 make install
