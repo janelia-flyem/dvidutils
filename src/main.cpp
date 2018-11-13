@@ -6,6 +6,9 @@
 #include "pybind11/stl.h"
 
 #include "xtensor/xarray.hpp"
+#include "xtensor/xtensor.hpp"
+#include "xtensor/xadapt.hpp"
+#include "xtensor/xio.hpp"
 
 #define FORCE_IMPORT_ARRAY
 #include "xtensor-python/pyarray.hpp"
@@ -17,6 +20,7 @@
 #include "downsample_labels.hpp"
 #include "remap_duplicates.hpp"
 #include "pydraco.hpp"
+#include "destripe.hpp"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -138,6 +142,30 @@ namespace dvidutils
         throw std::runtime_error(ss.str());
     }
 
+
+    xt::pytensor<uint8_t, 2, xt::layout_type::row_major> py_destripe(xt::pytensor<uint8_t, 2> & image_array,
+                                                                     std::vector<int> const & seam)
+    {
+        // We assume c-contiguous input.
+        if (image_array.strides()[1] != 1)
+        {
+            throw std::runtime_error("Input must be C_CONTIGUOUS");
+        }
+
+        uint8_t* image_ptr = &(image_array.at(0,0));
+
+        auto s = image_array.shape();
+        std::vector<size_t> shape( s.begin(), s.end() );
+        size_t num_vertical_corrections = shape[0] / 1000;
+        std::vector<uint8_t> corrected = destripe(image_ptr, shape[1], shape[0], num_vertical_corrections, seam, false);
+
+        // This implicit conversion will make a full copy,
+        // adding a second or so to the runtime of this function,
+        // which isn't so much compared to the ~1.5 minutes it takes to execute anyway.
+        return xt::adapt<xt::layout_type::row_major>(corrected, shape);
+    }
+
+
     PYBIND11_MODULE(_dvidutils, m) // note: PYBIND11_MODULE requires pybind11 >= 2.2.0
     {
         xt::import_numpy();
@@ -181,5 +209,6 @@ namespace dvidutils
     
         m.def("decode_drc_bytes_to_faces", &decode_drc_bytes_to_faces, "drc_bytes"_a);
 
+        m.def("destripe", &py_destripe, "image"_a, "seams"_a);
     }
 }

@@ -33,7 +33,7 @@ endif()
 # include include files
 #-------------------------------------------------------------------------------------------------------------------
 #file(GLOB_RECURSE headers include/*.hxx)
-#include_directories(include)
+include_directories(src)
 
 
 # Support deduplication in draco encoding.
@@ -67,7 +67,7 @@ set(DVIDUTILS_BUILD_OUTPUT_DIR "${CMAKE_BINARY_DIR}/$<CONFIG>")
 set(DVIDUTILS_PACKAGE "${DVIDUTILS_BUILD_OUTPUT_DIR}/dvidutils")
 
 # Target for the compiled module -- install to <build-dir>/dvidutils/_dvidutils.XXX
-pybind11_add_module(_dvidutils src/main.cpp) # Also locates Python, so we can use e.g. PYTHON_SITE_PACKAGES
+pybind11_add_module(_dvidutils src/destripe.cpp src/main.cpp) # Also locates Python, so we can use e.g. PYTHON_SITE_PACKAGES
 target_link_libraries(_dvidutils PRIVATE libdraco.a libdracoenc.a libdracodec.a)
 set_target_properties(_dvidutils PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${DVIDUTILS_PACKAGE}")
 
@@ -78,6 +78,14 @@ add_custom_target(dvidutils
      COMMAND cp -r "${CMAKE_SOURCE_DIR}/dvidutils/*" "${DVIDUTILS_PACKAGE}/"
 )
 add_dependencies(dvidutils _dvidutils)
+
+
+##
+## Destripe test utiltity
+##
+add_executable(destripe_main src/destripe_main.cpp src/destripe.cpp src/pngutils.cpp)
+target_link_libraries(destripe_main PRIVATE libpng.dylib)
+
 
 #
 # Tests
@@ -91,6 +99,7 @@ add_dependencies(pytests dvidutils)
 #
 # INSTALL
 #
-# python sources first
+# python sources were already copied into the build output,
+# so just copy the entire build output to the install dir
 install(DIRECTORY "${DVIDUTILS_PACKAGE}" DESTINATION "${PYTHON_SITE_PACKAGES}")
 
