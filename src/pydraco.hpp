@@ -69,91 +69,100 @@ py::bytes encode_faces_to_drc_bytes( vertices_array_t const & vertices,
         throw std::runtime_error("normals array size does not correspond to vertices array size");
     }
 
-    Mesh mesh;
-    mesh.set_num_points(vertex_count);
-    mesh.SetNumFaces(face_count);
+    draco::EncoderBuffer buf; // result
 
-    // Init vertex attribute
-    PointAttribute vert_att_template;
-    vert_att_template.Init( GeometryAttribute::POSITION,    // attribute_type
-                            nullptr,                        // buffer
-                            3,                              // num_components
-                            DT_FLOAT32,                     // data_type
-                            false,                          // normalized
-                            DataTypeLength(DT_FLOAT32) * 3, // byte_stride
-                            0 );                            // byte_offset
-    vert_att_template.SetIdentityMapping();
-
-    // Add vertex attribute to mesh (makes a copy internally)
-    int vert_att_id = mesh.AddAttribute(vert_att_template, true, vertex_count);
-    mesh.SetAttributeElementType(vert_att_id, MESH_VERTEX_ATTRIBUTE);
-
-    // Get a reference to the mesh's copy of the vertex attribute
-    PointAttribute & vert_att = *(mesh.attribute(vert_att_id));
-
-    // Load the vertices into the vertex attribute
-    for (size_t vi = 0; vi < vertex_count; ++vi)
+    // Release the GIL in the following scope.
+    // (No python functions or data structures are touched in this scope)
     {
-        std::array<float, 3> v{{ vertices(vi, 0), vertices(vi, 1), vertices(vi, 2) }};
-        vert_att.SetAttributeValue(AttributeValueIndex(vi), v.data());
-    }
+        py::gil_scoped_release nogil;
+
+        Mesh mesh;
+        mesh.set_num_points(vertex_count);
+        mesh.SetNumFaces(face_count);
     
-    if (normal_count > 0)
-    {
-        // Init normal attribute
-        PointAttribute norm_att_template;
-        norm_att_template.Init( GeometryAttribute::NORMAL,      // attribute_type
+        // Init vertex attribute
+        PointAttribute vert_att_template;
+        vert_att_template.Init( GeometryAttribute::POSITION,    // attribute_type
                                 nullptr,                        // buffer
                                 3,                              // num_components
                                 DT_FLOAT32,                     // data_type
                                 false,                          // normalized
                                 DataTypeLength(DT_FLOAT32) * 3, // byte_stride
                                 0 );                            // byte_offset
-        norm_att_template.SetIdentityMapping();
-        
-        // Add normal attribute to mesh (makes a copy internally)
-        int norm_att_id = mesh.AddAttribute(norm_att_template, true, normal_count);
-        mesh.SetAttributeElementType(norm_att_id, MESH_VERTEX_ATTRIBUTE);
+        vert_att_template.SetIdentityMapping();
 
-        // Get a reference to the mesh's copy of the normal attribute
-        PointAttribute & norm_att = *(mesh.attribute(norm_att_id));
-        
-        // Load the normals into the normal attribute
-        for (size_t ni = 0; ni < normal_count; ++ni)
+        // Add vertex attribute to mesh (makes a copy internally)
+        int vert_att_id = mesh.AddAttribute(vert_att_template, true, vertex_count);
+        mesh.SetAttributeElementType(vert_att_id, MESH_VERTEX_ATTRIBUTE);
+
+        // Get a reference to the mesh's copy of the vertex attribute
+        PointAttribute & vert_att = *(mesh.attribute(vert_att_id));
+
+        // Load the vertices into the vertex attribute
+        for (size_t vi = 0; vi < vertex_count; ++vi)
         {
-            std::array<float, 3> n{{ normals(ni, 0), normals(ni, 1), normals(ni, 2) }};
-            norm_att.SetAttributeValue(AttributeValueIndex(ni), n.data());
-        }
-    }
-    
-    // Load the faces
-    for (size_t f = 0; f < face_count; ++f)
-    {
-        Mesh::Face face = {{ PointIndex(faces(f, 0)),
-                             PointIndex(faces(f, 1)),
-                             PointIndex(faces(f, 2)) }};
-        
-        for (auto vi : face)
-        {
-            assert(vi < vertex_count && "face has an out-of-bounds vertex");
+            std::array<float, 3> v{{ vertices(vi, 0), vertices(vi, 1), vertices(vi, 2) }};
+            vert_att.SetAttributeValue(AttributeValueIndex(vi), v.data());
         }
         
-        mesh.SetFace(draco::FaceIndex(f), face);
+        if (normal_count > 0)
+        {
+            // Init normal attribute
+            PointAttribute norm_att_template;
+            norm_att_template.Init( GeometryAttribute::NORMAL,      // attribute_type
+                                    nullptr,                        // buffer
+                                    3,                              // num_components
+                                    DT_FLOAT32,                     // data_type
+                                    false,                          // normalized
+                                    DataTypeLength(DT_FLOAT32) * 3, // byte_stride
+                                    0 );                            // byte_offset
+            norm_att_template.SetIdentityMapping();
+
+            // Add normal attribute to mesh (makes a copy internally)
+            int norm_att_id = mesh.AddAttribute(norm_att_template, true, normal_count);
+            mesh.SetAttributeElementType(norm_att_id, MESH_VERTEX_ATTRIBUTE);
+
+            // Get a reference to the mesh's copy of the normal attribute
+            PointAttribute & norm_att = *(mesh.attribute(norm_att_id));
+
+            // Load the normals into the normal attribute
+            for (size_t ni = 0; ni < normal_count; ++ni)
+            {
+                std::array<float, 3> n{{ normals(ni, 0), normals(ni, 1), normals(ni, 2) }};
+                norm_att.SetAttributeValue(AttributeValueIndex(ni), n.data());
+            }
+        }
+        
+        // Load the faces
+        for (size_t f = 0; f < face_count; ++f)
+        {
+            Mesh::Face face = {{ PointIndex(faces(f, 0)),
+                                 PointIndex(faces(f, 1)),
+                                 PointIndex(faces(f, 2)) }};
+
+            for (auto vi : face)
+            {
+                assert(vi < vertex_count && "face has an out-of-bounds vertex");
+            }
+
+            mesh.SetFace(draco::FaceIndex(f), face);
+        }
+        
+        mesh.DeduplicateAttributeValues();
+        mesh.DeduplicatePointIds();
+
+        draco::Encoder encoder;
+
+        int speed = 10 - compression_level;
+        encoder.SetSpeedOptions(speed, speed);
+        encoder.SetAttributeQuantization(draco::GeometryAttribute::POSITION, position_quantization_bits);
+        encoder.SetAttributeQuantization(draco::GeometryAttribute::NORMAL,   normal_quantization_bits);
+        encoder.SetAttributeQuantization(draco::GeometryAttribute::GENERIC,  generic_quantization_bits);
+
+        encoder.EncodeMeshToBuffer(mesh, &buf);
     }
     
-    mesh.DeduplicateAttributeValues();
-    mesh.DeduplicatePointIds();
-    
-    draco::Encoder encoder;
-
-    int speed = 10 - compression_level;
-    encoder.SetSpeedOptions(speed, speed);
-    encoder.SetAttributeQuantization(draco::GeometryAttribute::POSITION, position_quantization_bits);
-    encoder.SetAttributeQuantization(draco::GeometryAttribute::NORMAL,   normal_quantization_bits);
-    encoder.SetAttributeQuantization(draco::GeometryAttribute::GENERIC,  generic_quantization_bits);
-
-    draco::EncoderBuffer buf;
-    encoder.EncodeMeshToBuffer(mesh, &buf);
+    // Safe to use python again now that the GIL is re-acquired.
     return py::bytes(buf.data(), buf.size());
 }
 
@@ -189,105 +198,110 @@ std::tuple<vertices_array_t, normals_array_t, faces_array_t> decode_drc_bytes_to
     char * raw_buf = nullptr;
     Py_ssize_t bytes_length = 0;
     PyBytes_AsStringAndSize(pyObj, &raw_buf, &bytes_length);
-    
-    // Wrap bytes in a DecoderBuffer
-    DecoderBuffer buf;
-    buf.Init( raw_buf, bytes_length );
-    
-    // Decode to Mesh
-    Decoder decoder;
-    
-    auto geometry_type = decoder.GetEncodedGeometryType(&buf).value();
-    if (geometry_type != TRIANGULAR_MESH)
-    {
-        throw std::runtime_error("Buffer does not appear to be a mesh file. (Is it a pointcloud?)");
-    }
-    
-    auto pMesh = decoder.DecodeMeshFromBuffer(&buf).value();
-    
-    // Strangely, encoding a mesh may cause it to have duplicate point ids,
-    // so we should de-duplicate them after decoding.
-    pMesh->DeduplicateAttributeValues();
-    pMesh->DeduplicatePointIds();
 
-    int point_count = pMesh->num_points();
-    
-    // Extract vertices
-    const PointAttribute *const vertex_att = pMesh->GetNamedAttribute(GeometryAttribute::POSITION);
-    if (vertex_att == nullptr)
+    // Now that we're done calling python functions, we can release the GIL
     {
-        throw std::runtime_error("Draco mesh appears to have no vertices.");
-    }
-    
-    vertices_array_t::shape_type verts_shape = {{point_count, 3}};
-    vertices_array_t vertices(verts_shape);
-    
-    std::array<float, 3> vertex_value;
-    for (PointIndex i(0); i < point_count; ++i)
-    {
-        if (!vertex_att->ConvertValue<float, 3>(vertex_att->mapped_index(i), &vertex_value[0]))
+        py::gil_scoped_release nogil;
+
+        // Wrap bytes in a DecoderBuffer
+        DecoderBuffer buf;
+        buf.Init( raw_buf, bytes_length );
+
+        // Decode to Mesh
+        Decoder decoder;
+
+        auto geometry_type = decoder.GetEncodedGeometryType(&buf).value();
+        if (geometry_type != TRIANGULAR_MESH)
         {
-            std::ostringstream ssErr;
-            ssErr << "Error reading vertex " << i.value() << std::endl;
-            throw std::runtime_error(ssErr.str());
+            throw std::runtime_error("Buffer does not appear to be a mesh file. (Is it a pointcloud?)");
         }
-        vertices(i.value(), 0) = vertex_value[0];
-        vertices(i.value(), 1) = vertex_value[1];
-        vertices(i.value(), 2) = vertex_value[2];
-    }
 
-    // Extract normals (if any)
-    const PointAttribute *const normal_att = pMesh->GetNamedAttribute(GeometryAttribute::NORMAL);
-    normals_array_t::shape_type::value_type normal_count = 0;
-    if (normal_att == nullptr)
-    {
-        normal_count = 0;
-    }
-    else
-    {
-        // See Note below about why we don't use normal_att->size()
-        normal_count = point_count;
-    }
+        auto pMesh = decoder.DecodeMeshFromBuffer(&buf).value();
+
+        // Strangely, encoding a mesh may cause it to have duplicate point ids,
+        // so we should de-duplicate them after decoding.
+        pMesh->DeduplicateAttributeValues();
+        pMesh->DeduplicatePointIds();
     
-    normals_array_t::shape_type normals_shape = {{normal_count, 3}};
-    normals_array_t normals(normals_shape);
-    
-    if (normal_count > 0)
-    {
-        std::array<float, 3> normal_value;
-        
-        // Important:
-        // We don't use normal_att->size(), because it might be smaller
-        // than the number of vertices (if not all vertices had unique normals).
-        // Instead, we loop over the POINT indices, mapping from point indices to normal entries.
-        for (PointIndex i(0); i < normal_count; ++i)
+        int point_count = pMesh->num_points();
+
+        // Extract vertices
+        const PointAttribute *const vertex_att = pMesh->GetNamedAttribute(GeometryAttribute::POSITION);
+        if (vertex_att == nullptr)
         {
-            if (!normal_att->ConvertValue<float, 3>(normal_att->mapped_index(i), &normal_value[0]))
+            throw std::runtime_error("Draco mesh appears to have no vertices.");
+        }
+        
+        vertices_array_t::shape_type verts_shape = {{point_count, 3}};
+        vertices_array_t vertices(verts_shape);
+
+        std::array<float, 3> vertex_value;
+        for (PointIndex i(0); i < point_count; ++i)
+        {
+            if (!vertex_att->ConvertValue<float, 3>(vertex_att->mapped_index(i), &vertex_value[0]))
             {
                 std::ostringstream ssErr;
-                ssErr << "Error reading normal for point " << i << std::endl;
+                ssErr << "Error reading vertex " << i.value() << std::endl;
                 throw std::runtime_error(ssErr.str());
             }
-            normals(i.value(), 0) = normal_value[0];
-            normals(i.value(), 1) = normal_value[1];
-            normals(i.value(), 2) = normal_value[2];
+            vertices(i.value(), 0) = vertex_value[0];
+            vertices(i.value(), 1) = vertex_value[1];
+            vertices(i.value(), 2) = vertex_value[2];
         }
-    }
 
-    // Extract faces
-    faces_array_t::shape_type faces_shape = {{pMesh->num_faces(), 3}};
-    faces_array_t faces(faces_shape);
-    
-    for (auto i = 0; i < pMesh->num_faces(); ++i)
-    {
-        auto const & face = pMesh->face(FaceIndex(i));
-        faces(i, 0) = face[0].value();
-        faces(i, 1) = face[1].value();
-        faces(i, 2) = face[2].value();
-    }
-    
+        // Extract normals (if any)
+        const PointAttribute *const normal_att = pMesh->GetNamedAttribute(GeometryAttribute::NORMAL);
+        normals_array_t::shape_type::value_type normal_count = 0;
+        if (normal_att == nullptr)
+        {
+            normal_count = 0;
+        }
+        else
+        {
+            // See Note below about why we don't use normal_att->size()
+            normal_count = point_count;
+        }
 
-    return std::make_tuple( std::move(vertices), std::move(normals), std::move(faces) );
+        normals_array_t::shape_type normals_shape = {{normal_count, 3}};
+        normals_array_t normals(normals_shape);
+
+        if (normal_count > 0)
+        {
+            std::array<float, 3> normal_value;
+
+            // Important:
+            // We don't use normal_att->size(), because it might be smaller
+            // than the number of vertices (if not all vertices had unique normals).
+            // Instead, we loop over the POINT indices, mapping from point indices to normal entries.
+            for (PointIndex i(0); i < normal_count; ++i)
+            {
+                if (!normal_att->ConvertValue<float, 3>(normal_att->mapped_index(i), &normal_value[0]))
+                {
+                    std::ostringstream ssErr;
+                    ssErr << "Error reading normal for point " << i << std::endl;
+                    throw std::runtime_error(ssErr.str());
+                }
+                normals(i.value(), 0) = normal_value[0];
+                normals(i.value(), 1) = normal_value[1];
+                normals(i.value(), 2) = normal_value[2];
+            }
+        }
+
+        // Extract faces
+        faces_array_t::shape_type faces_shape = {{pMesh->num_faces(), 3}};
+        faces_array_t faces(faces_shape);
+
+        for (auto i = 0; i < pMesh->num_faces(); ++i)
+        {
+            auto const & face = pMesh->face(FaceIndex(i));
+            faces(i, 0) = face[0].value();
+            faces(i, 1) = face[1].value();
+            faces(i, 2) = face[2].value();
+        }
+
+    
+        return std::make_tuple( std::move(vertices), std::move(normals), std::move(faces) );
+    }
 }
 
 #endif
