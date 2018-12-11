@@ -199,12 +199,14 @@ std::tuple<vertices_array_t, normals_array_t, faces_array_t> decode_drc_bytes_to
     Py_ssize_t bytes_length = 0;
     PyBytes_AsStringAndSize(pyObj, &raw_buf, &bytes_length);
 
-    // Now that we're done calling python functions, we can release the GIL
+    DecoderBuffer buf;
+    int point_count;
+    std::unique_ptr<Mesh> pMesh;
+    
     {
+        // Release GIL while decoding the mesh in C++
         py::gil_scoped_release nogil;
 
-        // Wrap bytes in a DecoderBuffer
-        DecoderBuffer buf;
         buf.Init( raw_buf, bytes_length );
 
         // Decode to Mesh
@@ -216,14 +218,43 @@ std::tuple<vertices_array_t, normals_array_t, faces_array_t> decode_drc_bytes_to
             throw std::runtime_error("Buffer does not appear to be a mesh file. (Is it a pointcloud?)");
         }
 
-        auto pMesh = decoder.DecodeMeshFromBuffer(&buf).value();
+        
+        // Wrap bytes in a DecoderBuffer
+        pMesh = decoder.DecodeMeshFromBuffer(&buf).value();
 
         // Strangely, encoding a mesh may cause it to have duplicate point ids,
         // so we should de-duplicate them after decoding.
         pMesh->DeduplicateAttributeValues();
         pMesh->DeduplicatePointIds();
     
-        int point_count = pMesh->num_points();
+        point_count = pMesh->num_points();
+    }
+    
+    // Initialize Python arrays (with GIL re-aqcuired)
+    
+    // Vertices
+    vertices_array_t::shape_type verts_shape = {{point_count, 3}};
+    vertices_array_t vertices(verts_shape);
+    
+    // Normals
+    const PointAttribute *const normal_att = pMesh->GetNamedAttribute(GeometryAttribute::NORMAL);
+    normals_array_t::shape_type::value_type normal_count = 0;
+    if (normal_att != nullptr)
+    {
+        // See Note below about why we don't use normal_att->size()
+        normal_count = point_count;
+    }
+    
+    normals_array_t::shape_type normals_shape = {{normal_count, 3}};
+    normals_array_t normals(normals_shape);
+    
+    // Faces
+    faces_array_t::shape_type faces_shape = {{pMesh->num_faces(), 3}};
+    faces_array_t faces(faces_shape);
+
+    {
+        // Release GIL again while copying from pMesh into the arrays
+        py::gil_scoped_release nogil;
 
         // Extract vertices
         const PointAttribute *const vertex_att = pMesh->GetNamedAttribute(GeometryAttribute::POSITION);
@@ -231,9 +262,6 @@ std::tuple<vertices_array_t, normals_array_t, faces_array_t> decode_drc_bytes_to
         {
             throw std::runtime_error("Draco mesh appears to have no vertices.");
         }
-        
-        vertices_array_t::shape_type verts_shape = {{point_count, 3}};
-        vertices_array_t vertices(verts_shape);
 
         std::array<float, 3> vertex_value;
         for (PointIndex i(0); i < point_count; ++i)
@@ -250,21 +278,6 @@ std::tuple<vertices_array_t, normals_array_t, faces_array_t> decode_drc_bytes_to
         }
 
         // Extract normals (if any)
-        const PointAttribute *const normal_att = pMesh->GetNamedAttribute(GeometryAttribute::NORMAL);
-        normals_array_t::shape_type::value_type normal_count = 0;
-        if (normal_att == nullptr)
-        {
-            normal_count = 0;
-        }
-        else
-        {
-            // See Note below about why we don't use normal_att->size()
-            normal_count = point_count;
-        }
-
-        normals_array_t::shape_type normals_shape = {{normal_count, 3}};
-        normals_array_t normals(normals_shape);
-
         if (normal_count > 0)
         {
             std::array<float, 3> normal_value;
@@ -288,9 +301,6 @@ std::tuple<vertices_array_t, normals_array_t, faces_array_t> decode_drc_bytes_to
         }
 
         // Extract faces
-        faces_array_t::shape_type faces_shape = {{pMesh->num_faces(), 3}};
-        faces_array_t faces(faces_shape);
-
         for (auto i = 0; i < pMesh->num_faces(); ++i)
         {
             auto const & face = pMesh->face(FaceIndex(i));
@@ -298,10 +308,9 @@ std::tuple<vertices_array_t, normals_array_t, faces_array_t> decode_drc_bytes_to
             faces(i, 1) = face[1].value();
             faces(i, 2) = face[2].value();
         }
-
-    
-        return std::make_tuple( std::move(vertices), std::move(normals), std::move(faces) );
     }
+
+    return std::make_tuple( std::move(vertices), std::move(normals), std::move(faces) );
 }
 
 #endif
