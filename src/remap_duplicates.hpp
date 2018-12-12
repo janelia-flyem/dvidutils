@@ -17,6 +17,15 @@ using std::uint32_t;
 
 namespace dvidutils
 {
+    // The goal of this function is to tell you how to remove duplicate
+    // rows from a list of vertices.  For each duplicate vertex we find,
+    // it tells you which row (earlier in the list) it is a duplicate of.
+    // If you have some array that refers to these vertices (e.g. mesh faces),
+    // you can use this mapping to relabel those references so that the
+    // 'duplicates' are no longer needed.  At that point, you could drop the
+    // duplicate vertices from your list (as long as you renumber the face
+    // references accordingly).
+    //
     // Given an array of vertices (N,3), find those vertices which are
     // duplicates and return an index mapping that points only to the
     // first occurrence of each duplicate vertex found.
