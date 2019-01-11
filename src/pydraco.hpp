@@ -201,7 +201,8 @@ std::tuple<vertices_array_t, normals_array_t, faces_array_t> decode_drc_bytes_to
 
     DecoderBuffer buf;
     int point_count;
-    std::unique_ptr<Mesh> pMesh;
+    typedef std::unique_ptr<Mesh> MeshPtr;
+    MeshPtr pMesh;
     
     {
         // Release GIL while decoding the mesh in C++
@@ -218,10 +219,21 @@ std::tuple<vertices_array_t, normals_array_t, faces_array_t> decode_drc_bytes_to
             throw std::runtime_error("Buffer does not appear to be a mesh file. (Is it a pointcloud?)");
         }
 
-        
         // Wrap bytes in a DecoderBuffer
-        pMesh = decoder.DecodeMeshFromBuffer(&buf).value();
-
+        StatusOr<MeshPtr> decoded = decoder.DecodeMeshFromBuffer(&buf);
+        if (!decoded.status().ok())
+        {
+            std::ostringstream ss;
+            ss << "draco::Decoder::DecodeMeshFromBuffer() returned bad status: " << decoded.status();
+            throw std::runtime_error(ss.str().c_str());
+        }
+        
+        // This use of std::move feels like an ugly hack to workaround the fact
+        // that StatusOr does not declare the following member:
+        //   T & value() & { return value_; }
+        // ... it declares a const version of it, which doesn't help us...
+        pMesh = std::move(decoded).value();
+        
         // Strangely, encoding a mesh may cause it to have duplicate point ids,
         // so we should de-duplicate them after decoding.
         pMesh->DeduplicateAttributeValues();
