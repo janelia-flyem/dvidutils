@@ -28,9 +28,9 @@ requirements:
   host:
     - python >=3.6,{{PY_VER}}*
     - numpy {{NPY_VER}}* # To avoid runtime errors about the numpy ABI
-    - xtensor >=0.15
-    - xtensor-python 0.19.* # https://github.com/QuantStack/xtensor-python/issues/167
-    - pybind11 >=2.2.1 # Required for call_guard
+    - xtensor 0.19.3
+    - xtensor-python 0.22.1
+    - pybind11 2.2.4
     - draco 1.3.4.*
     - boost
   run:
