@@ -75,6 +75,24 @@ def test_downsample_with_ties():
     d = downsample_labels(a, 2, suppress_zero=True)
     assert (d == [[1, 3, 1]]).all()
 
+def test_downsample_with_ties_3d():
+    """
+    In the event of a tie between two voxels,
+    we choose the lesser of the two values
+    (or lesser of four values).
+    """
+    a = [[[1,1, 3,0,  2,3, 4,3],
+          [2,2, 3,0,  1,0, 3,4]],
+
+         [[2,2, 3,0,  1,0, 3,4],
+          [2,2, 3,0,  1,0, 3,4]]]
+    
+    d = downsample_labels(a, 2)
+    assert (d == [[[2, 0, 0, 3]]]).all()
+
+    d = downsample_labels(a, 2, suppress_zero=True)
+    assert (d == [[[2, 3, 1, 3]]]).all()
+
 
 if __name__ == "__main__":
     pytest.main()
