@@ -54,12 +54,29 @@ namespace dvidutils {
             {
                 output_shape.push_back(s);
             }
-
             for (auto & s : output_shape)
             {
+                if (s == 0) {
+                    // Technically, we could omit this check -- it should simply result in a zero-size output.
+                    std::ostringstream ss;
+                    ss << "Precondition violation: zero-size array.  Shape: (";
+                    for (auto d : labels.shape())
+                    {
+                        ss << d << ", ";
+                    }
+                    ss << ")";
+                    throw std::runtime_error(ss.str().c_str());
+                }
                 if (s % factor != 0)
                 {
-                    throw std::runtime_error("Precondition violation: Downsampling factor must divide cleanly into array shape");
+                    std::ostringstream ss;
+                    ss << "Precondition violation: Downsampling factor must divide cleanly into array shape: (";
+                    for (auto d : labels.shape())
+                    {
+                        ss << d << ", ";
+                    }
+                    ss << ")";
+                    throw std::runtime_error(ss.str().c_str());
                 }
                 
                 s /= factor;
@@ -129,6 +146,29 @@ namespace dvidutils {
             }
             for (auto & s : output_shape)
             {
+                if (s == 0) {
+                    // Technically, we could omit this check -- it should simply result in a zero-size output.
+                    std::ostringstream ss;
+                    ss << "Precondition violation: zero-size array.  Shape: (";
+                    for (auto d : labels.shape())
+                    {
+                        ss << d << ", ";
+                    }
+                    ss << ")";
+                    throw std::runtime_error(ss.str().c_str());
+                }
+                if (s % factor != 0)
+                {
+                    std::ostringstream ss;
+                    ss << "Precondition violation: Downsampling factor must divide cleanly into array shape: (";
+                    for (auto d : labels.shape())
+                    {
+                        ss << d << ", ";
+                    }
+                    ss << ")";
+                    throw std::runtime_error(ss.str().c_str());
+                }
+                
                 s /= factor;
             }
             auto res = result_type::from_shape(output_shape);

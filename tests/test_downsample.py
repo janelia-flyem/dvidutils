@@ -94,5 +94,15 @@ def test_downsample_with_ties_3d():
     assert (d == [[[2, 3, 1, 3]]]).all()
 
 
+def test_zero_size_array():
+    a = np.zeros((20,0), np.uint64)
+    with pytest.raises(RuntimeError):
+        downsample_labels(a, 2)
+
+    a = np.zeros((20,0,10), np.uint64)
+    with pytest.raises(RuntimeError):
+        downsample_labels(a, 2)
+
+
 if __name__ == "__main__":
     pytest.main()
