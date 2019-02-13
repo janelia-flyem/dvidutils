@@ -26,7 +26,7 @@ requirements:
     - gxx_linux-64 # [linux]
     - cmake
   host:
-    - python >=3.6,{{PY_VER}}*
+    - python {{PY_VER}}*
     - numpy {{NPY_VER}}* # To avoid runtime errors about the numpy ABI
     - xtensor 0.19.3
     - xtensor-python 0.22.1
