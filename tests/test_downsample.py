@@ -53,11 +53,25 @@ def test_downsample_labels_3D():
     assert (d == [[[2, 3]]]).all()
 
 
+def test_downsample_not_contiguous():
+    # Hopefully if there are memory issues with non-contiguous input,
+    # The Xcode AddressSanitizer will catch them when this runs.
+    a = np.random.randint(10, size=(100,100,100), dtype=np.uint64)
+    d = downsample_labels(a[40:60, 40:60, 40:60], 2)
+    assert d.shape == (10,10,10)
+
+
 def test_input_doesnt_change():
     a = np.zeros((64,64,64), dtype=np.uint32)
     d = downsample_labels(a, 2, suppress_zero=False)
-    
     assert a.shape == (64,64,64), "Shape of a changed!"
+
+
+def test_all_zeros():
+    a = np.zeros((100,100,100), dtype=np.uint64)
+    d = downsample_labels(a, 2, suppress_zero=True)
+    assert (d == 0).all()
+    assert d.shape == (50,50,50)
 
 
 def test_downsample_with_ties():

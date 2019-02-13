@@ -29,6 +29,10 @@ namespace dvidutils {
     template <class pair_t>
     bool compare_pairs_suppress_zero(pair_t const & p1, pair_t const & p2)
     {
+        if (p1.first == 0 && p2.first == 0)
+        {
+            return false;
+        }
         if (p1.first == 0)
         {
             return true;
