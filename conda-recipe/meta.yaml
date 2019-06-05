@@ -14,28 +14,22 @@ build:
   number: 0
   string: py{{CONDA_PY}}_{{PKG_BUILDNUM}}_g{{GIT_FULL_HASH[:7]}}
 
-  # By default, gcc-5+ can't be used if we intend to link with
-  # packages that were produced with lower versions of gcc.
-  # We must explicitly tell gcc to use the old libstdc++ ABI.
-  # (for instance, our draco package).
-  script_env:                     # [linux]
-    - DO_NOT_BUILD_WITH_CXX11_ABI # [linux]
-
 requirements:
   build:
-    - gxx_linux-64 # [linux]
+    - {{ compiler('c') }}
+    - {{ compiler('cxx') }}
     - cmake
   host:
-    - python {{PY_VER}}*
-    - numpy {{NPY_VER}}* # To avoid runtime errors about the numpy ABI
+    - python {{ python }}*
+    - numpy {{ numpy }}* # To avoid runtime errors about the numpy ABI
     - xtensor 0.19.3
     - xtensor-python 0.22.1
     - pybind11 2.2.4
     - draco 1.3.4.*
     - boost
   run:
-    - python {{PY_VER}}*
-    - numpy {{NPY_VER}}*
+    - python {{ python }}*
+    - numpy {{ numpy }}*
     - draco 1.3.4.*
 
 test:
