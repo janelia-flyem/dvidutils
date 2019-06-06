@@ -68,7 +68,16 @@ set(DVIDUTILS_PACKAGE "${DVIDUTILS_BUILD_OUTPUT_DIR}/dvidutils")
 
 # Target for the compiled module -- install to <build-dir>/dvidutils/_dvidutils.XXX
 pybind11_add_module(_dvidutils src/destripe.cpp src/main.cpp) # Also locates Python, so we can use e.g. PYTHON_SITE_PACKAGES
-target_link_libraries(_dvidutils PRIVATE libdraco.a libdracoenc.a libdracodec.a)
+
+# Link to draco
+# NOTE: By default, draco doesn't build shared libs, but our conda recipe for it does.
+#       If we ever switch to conda-forge's package for draco, we'll have to change this to the static libs.
+if (APPLE)
+	target_link_libraries(_dvidutils PRIVATE libdraco.dylib libdracoenc.dylib libdracodec.dylib)
+else()
+	target_link_libraries(_dvidutils PRIVATE libdraco.so libdracoenc.so libdracodec.so)
+endif()
+
 set_target_properties(_dvidutils PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${DVIDUTILS_PACKAGE}")
 
 # Target to copy the python sources to the build output
