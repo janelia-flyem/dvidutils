@@ -84,7 +84,7 @@ set_target_properties(_dvidutils PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${DVIDUTIL
 add_custom_target(dvidutils
      ALL
      COMMAND mkdir -p "${DVIDUTILS_PACKAGE}"
-     COMMAND cp -r "${CMAKE_SOURCE_DIR}/dvidutils/*" "${DVIDUTILS_PACKAGE}/"
+     COMMAND cp -R "${CMAKE_SOURCE_DIR}/dvidutils/*" "${DVIDUTILS_PACKAGE}/"
 )
 add_dependencies(dvidutils _dvidutils)
 
