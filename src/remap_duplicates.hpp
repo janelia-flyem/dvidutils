@@ -31,6 +31,16 @@ namespace dvidutils
     // first occurrence of each duplicate vertex found.
     // Non-duplicate vertexes are not included in the result,
     // i.e. anything missing from the results is implicitly identity-mapped.
+    //
+    // Returns an array where each row is a duplicate index (D) and the first
+    // index it is a duplicate of (F):
+    //
+    //   [[D,F],
+    //    [D,F],
+    //    [D,F],
+    //    ...
+    //   ]
+    //
     template <typename vertices_array_t, typename index_map_array_t>
     index_map_array_t remap_duplicates(vertices_array_t const & vertices)
     {
