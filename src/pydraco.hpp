@@ -39,7 +39,7 @@ struct Quantizer {
   //     while a value of `2**num_quantization_bits-1` corresponds to
   //     `fragment_origin[i]+fragment_shape[i]`.  Should be less than or equal
   //     to the number of bits in `VertexCoord`.
-  Quantizer(coords_t const & mesh_origin, coords_t const & fragment_shape, coords_t const & fragment_origin, int num_quantization_bits) {
+  Quantizer(coords_t const & fragment_shape, coords_t const & fragment_origin, int num_quantization_bits) {
       //assumes has been scaled between 0 and 1
 
         for (int i = 0; i < 3; ++i) {
@@ -48,7 +48,7 @@ struct Quantizer {
                                     (sizeof(uint32_t) * 8 - num_quantization_bits));
             scale[i] = upper_bound[i] / static_cast<float>(fragment_shape[i]);
             // Add 0.5 to round to nearest rather than round down.
-            offset[i] = 0 - fragment_origin[i] + 0.5 /scale[i];//mesh_origin[i] - fragment_origin[i] + 0.5 / scale[i];
+            offset[i] = 0.5 /scale[i] - fragment_origin[i] ;//mesh_origin[i] - fragment_origin[i] + 0.5 / scale[i];
         }
   }
 
@@ -89,7 +89,6 @@ bool DEFAULT_DO_CUSTOM = true;
 py::bytes encode_faces_to_custom_drc_bytes( vertices_array_t const & vertices,
                                      normals_array_t const & normals,
                                      faces_array_t const & faces,
-                                     coords_t const & mesh_origin,
                                      coords_t const & fragment_shape,
                                      coords_t const & fragment_origin,
                                      int compression_level,
@@ -99,14 +98,13 @@ py::bytes encode_faces_to_custom_drc_bytes( vertices_array_t const & vertices,
                                      bool do_custom)
 {
     using namespace draco;
-    std::cout<<"position quantization bits: "<<position_quantization_bits<<std::endl;
     DataType data_type = do_custom ? DT_UINT32 : DT_FLOAT32;
 
     auto vertex_count = vertices.shape()[0];
     auto normal_count = do_custom ? 0 :normals.shape()[0]; //FOR CUSTOM IGNORE NORMALS, SCREWS UP DECODING
     auto face_count = faces.shape()[0];
 
-    Quantizer quantizer(mesh_origin, fragment_shape, fragment_origin, position_quantization_bits);
+    Quantizer quantizer(fragment_shape, fragment_origin, position_quantization_bits);
 
 
     // Special case:
@@ -238,12 +236,11 @@ py::bytes encode_faces_to_drc_bytes( vertices_array_t const & vertices,
                                      int normal_quantization_bits,
                                      int generic_quantization_bits)
 {
-    coords_t mesh_origin = xt::zeros<int>({3});
     coords_t fragment_shape = xt::zeros<int>({3});
     coords_t fragment_origin = xt::zeros<int>({3});
 
     bool do_custom = false;
-    return encode_faces_to_custom_drc_bytes(vertices, normals, faces, mesh_origin, fragment_shape, fragment_origin, compression_level, position_quantization_bits, normal_quantization_bits, generic_quantization_bits, do_custom);
+    return encode_faces_to_custom_drc_bytes(vertices, normals, faces, fragment_shape, fragment_origin, compression_level, position_quantization_bits, normal_quantization_bits, generic_quantization_bits, do_custom);
 }
 
 // Decode a draco-encoded buffer (given as a python bytes object)

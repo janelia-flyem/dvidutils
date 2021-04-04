@@ -211,7 +211,6 @@ namespace dvidutils
               "vertices"_a,
               "normals"_a,
               "faces"_a,
-              "mesh_origin"_a,
               "fragment_shape"_a,
               "fragment_origin"_a,
               "compression_level"_a=DEFAULT_COMPRESSION_LEVEL,
