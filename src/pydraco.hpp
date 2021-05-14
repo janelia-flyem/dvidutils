@@ -24,7 +24,9 @@ typedef xt::pytensor<float, 2> vertices_array_t;
 typedef xt::pytensor<float, 2> normals_array_t;
 typedef xt::pytensor<uint32_t, 2> faces_array_t;
 typedef xt::pytensor<int, 1> coords_t;
-
+/*
+-DCMAKE_BUILD_TYPE=Debug     -DCMAKE_CXX_FLAGS_DEBUG="-g -O0 -DXTENSOR_ENABLE_ASSERT=ON"     -DCMAKE_PREFIX_PATH="${CONDA_PREFIX}" -DCMAKE_CXX_FLAGS=-I/groups/scicompsoft/home/ackermand/miniconda3/envs/multiresolution/include/python3.7m/pybind11
+*/
 struct Quantizer {
   // Constructs a quantizer.
   //
@@ -47,8 +49,7 @@ struct Quantizer {
                 static_cast<float>(std::numeric_limits<uint32_t>::max() >>
                                     (sizeof(uint32_t) * 8 - num_quantization_bits));
             scale[i] = upper_bound[i] / static_cast<float>(fragment_shape[i]);
-            // Add 0.5 to round to nearest rather than round down.
-            offset[i] = 0.5 /scale[i] - fragment_origin[i] ;//mesh_origin[i] - fragment_origin[i] + 0.5 / scale[i];
+            offset[i] = fragment_origin[i] ;//mesh_origin[i] - fragment_origin[i] + 0.5 / scale[i];
         }
   }
 
@@ -56,11 +57,8 @@ struct Quantizer {
   std::array<uint32_t, 3> operator()(std::array<float, 3>& v_pos) {
     for (int i = 0; i < 3; ++i) {
       output[i] = static_cast<uint32_t>(std::min(
-          upper_bound[i], std::max(0.0f, (v_pos[i] + offset[i]) * scale[i])));
-        //output[i] = static_cast<uint32_t>(v_pos[i]);
-       // std::cout<<v_pos[i]<<" "<<upper_bound[i]<<" "<<offset[i]<<" "<<scale[i]<<" "<<output[i]<<std::endl;
-
-
+          //might need to further fix this due to rounding artifacts which set eg a value to 511 when it should be 512. that is why i moved scale out here
+          upper_bound[i], std::max(0.0f, (v_pos[i] - offset[i]) * scale[i] + 0.5f))); // Add 0.5 to round to nearest rather than round down.
     }
     return output;
   }
