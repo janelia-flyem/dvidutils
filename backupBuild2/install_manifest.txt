@@ -1,4 +1,0 @@
-/groups/scicompsoft/home/ackermand/miniconda3/envs/decimation/lib/python3.7/site-packages/dvidutils/__pycache__/__init__.cpython-37.pyc
-/groups/scicompsoft/home/ackermand/miniconda3/envs/decimation/lib/python3.7/site-packages/dvidutils/_dvidutils.cpython-36m-x86_64-linux-gnu.so
-/groups/scicompsoft/home/ackermand/miniconda3/envs/decimation/lib/python3.7/site-packages/dvidutils/__init__.py
-/groups/scicompsoft/home/ackermand/miniconda3/envs/decimation/lib/python3.7/site-packages/dvidutils/_dvidutils.cpython-37m-x86_64-linux-gnu.so
