@@ -1,7 +1,9 @@
 *.egg-info/
 .ipynb_checkpoints/
 dist/
-build*
+build/
+backupBuild2/
+backupBuild3/
 src/include/
 *.py[cod]
 
