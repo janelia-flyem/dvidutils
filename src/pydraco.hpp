@@ -43,12 +43,12 @@ struct Quantizer {
   //     to the number of bits in `VertexCoord`.
   Quantizer(coords_t const & fragment_shape, coords_t const & fragment_origin, int num_quantization_bits) {
       //assumes has been scaled between 0 and 1
-
         for (int i = 0; i < 3; ++i) {
             upper_bound[i] =
-                static_cast<float>(std::numeric_limits<uint32_t>::max() >>
+                static_cast<double>(std::numeric_limits<uint32_t>::max() >>
                                     (sizeof(uint32_t) * 8 - num_quantization_bits));
-            scale[i] = upper_bound[i] / static_cast<float>(fragment_shape[i]);
+            fragment_shape_double[i] = static_cast<double>(fragment_shape[i]);
+            //scale[i] = upper_bound[i] / static_cast<float>(fragment_shape[i]);
             offset[i] = fragment_origin[i] ;//mesh_origin[i] - fragment_origin[i] + 0.5 / scale[i];
         }
   }
@@ -58,15 +58,16 @@ struct Quantizer {
     for (int i = 0; i < 3; ++i) {
       output[i] = static_cast<uint32_t>(std::min(
           //might need to further fix this due to rounding artifacts which set eg a value to 511 when it should be 512. that is why i moved scale out here
-          upper_bound[i], std::max(0.0f, (v_pos[i] - offset[i]) * scale[i] + 0.5f))); // Add 0.5 to round to nearest rather than round down.
+          upper_bound[i], std::max(0.0, (v_pos[i] - offset[i]) * upper_bound[i] / fragment_shape_double[i] + 0.5))); // Add 0.5 to round to nearest rather than round down.
     }
     return output;
   }
 
   std::array<uint32_t, 3> output;
-  std::array<float, 3> offset;
-  std::array<float, 3> scale;
-  std::array<float, 3> upper_bound;
+  std::array<double, 3> offset;
+  std::array<double, 3> scale;
+  std::array<double, 3> upper_bound;
+  std::array<double, 3> fragment_shape_double; 
 };
 
 // Defaults from the draco_encoder command-line tool.
