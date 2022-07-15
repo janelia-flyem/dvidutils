@@ -65,6 +65,10 @@ namespace dvidutils
             return res;
         }
 
+        // FIXME: There seems to be an issue with the 'default_value' parameter.
+        //        mapper.apply_with_default(a, 0) works, but mapper.apply_with_default(a, np.uint64(0)) is broken???
+        //        Does xtensor-python (or pybind11) not properly convert np.uint64 to std::uint64_t ??
+        //        I need to make a reduced test case to understand what's going on here.
         template <typename array_t>
         codomain_array_t apply_with_default( array_t const & src, typename array_t::value_type default_value=0 )
         {
