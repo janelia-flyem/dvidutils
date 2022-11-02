@@ -44,8 +44,8 @@ add_definitions("-DDRACO_ATTRIBUTE_DEDUPLICATION_SUPPORTED=1")
 #-------------------------------------------------------------------------------------------------------------------
 set(CMAKE_PREFIX_PATH $ENV{CONDA_PREFIX} CACHE PATH "")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_PREFIX_PATH}/share/cmake/pybind11")
+find_package(pybind11 CONFIG REQUIRED)
 
-include(pybind11Tools)
 include_directories("${CMAKE_PREFIX_PATH}/include")
 
 link_directories("${CMAKE_PREFIX_PATH}/lib")
@@ -67,7 +67,10 @@ set(DVIDUTILS_BUILD_OUTPUT_DIR "${CMAKE_BINARY_DIR}/$<CONFIG>")
 set(DVIDUTILS_PACKAGE "${DVIDUTILS_BUILD_OUTPUT_DIR}/dvidutils")
 
 # Target for the compiled module -- install to <build-dir>/dvidutils/_dvidutils.XXX
-pybind11_add_module(_dvidutils src/destripe.cpp src/main.cpp) # Also locates Python, so we can use e.g. PYTHON_SITE_PACKAGES
+###pybind11_add_module(_dvidutils src/destripe.cpp src/main.cpp) # Also locates Python, so we can use e.g. PYTHON_SITE_PACKAGES
+add_library(_dvidutils MODULE src/destripe.cpp src/main.cpp)
+target_link_libraries(_dvidutils PUBLIC pybind11::module)
+set_target_properties(_dvidutils PROPERTIES PREFIX "")
 
 # Link to draco
 # NOTE: By default, draco doesn't build shared libs, but our conda recipe for it does.
