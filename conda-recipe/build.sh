@@ -8,6 +8,9 @@ cmake .. \
     -DCMAKE_PREFIX_PATH=${PREFIX} \
     -DCMAKE_INSTALL_PREFIX=${PREFIX} \
     -DCMAKE_SHARED_LINKER_FLAGS="-Wl,-rpath,${PREFIX}/lib -L${PREFIX}/lib" \
+    -DCMAKE_CXX_LINK_FLAGS="${LDFLAGS}" \
+    -DCMAKE_EXE_LINKER_FLAGS="${LDFLAGS}" \
+    -DCMAKE_CXX_FLAGS="${CXXFLAGS}" \
 ##
 
 make -j${CPU_COUNT} dvidutils
