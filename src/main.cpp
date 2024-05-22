@@ -77,6 +77,26 @@ namespace dvidutils
                 "src"_a, "allow_unmapped"_a=false,
                 py::call_guard<py::gil_scoped_release>());
 
+        cls.def("apply",
+                &LabelMapper_t::template apply<xt::pyarray<int8_t>>,
+                "src"_a, "allow_unmapped"_a=false,
+                py::call_guard<py::gil_scoped_release>());
+
+        cls.def("apply",
+                &LabelMapper_t::template apply<xt::pyarray<int16_t>>,
+                "src"_a, "allow_unmapped"_a=false,
+                py::call_guard<py::gil_scoped_release>());
+
+        cls.def("apply",
+                &LabelMapper_t::template apply<xt::pyarray<int32_t>>,
+                "src"_a, "allow_unmapped"_a=false,
+                py::call_guard<py::gil_scoped_release>());
+
+        cls.def("apply",
+                &LabelMapper_t::template apply<xt::pyarray<int64_t>>,
+                "src"_a, "allow_unmapped"_a=false,
+                py::call_guard<py::gil_scoped_release>());
+
         // in-place
         cls.def("apply_inplace",
                 &LabelMapper_t::template apply_inplace<xt::pyarray<uint8_t>>,
@@ -98,6 +118,26 @@ namespace dvidutils
                 "src"_a, "allow_unmapped"_a=false,
                 py::call_guard<py::gil_scoped_release>());
         
+        cls.def("apply_inplace",
+                &LabelMapper_t::template apply_inplace<xt::pyarray<int8_t>>,
+                "src"_a, "allow_unmapped"_a=false,
+                py::call_guard<py::gil_scoped_release>());
+
+        cls.def("apply_inplace",
+                &LabelMapper_t::template apply_inplace<xt::pyarray<int16_t>>,
+                "src"_a, "allow_unmapped"_a=false,
+                py::call_guard<py::gil_scoped_release>());
+
+        cls.def("apply_inplace",
+                &LabelMapper_t::template apply_inplace<xt::pyarray<int32_t>>,
+                "src"_a, "allow_unmapped"_a=false,
+                py::call_guard<py::gil_scoped_release>());
+
+        cls.def("apply_inplace",
+                &LabelMapper_t::template apply_inplace<xt::pyarray<int64_t>>,
+                "src"_a, "allow_unmapped"_a=false,
+                py::call_guard<py::gil_scoped_release>());
+
         // with-default
         cls.def("apply_with_default",
                 &LabelMapper_t::template apply_with_default<xt::pyarray<uint8_t>>,
@@ -119,7 +159,26 @@ namespace dvidutils
                 "src"_a, "default"_a=0,
                 py::call_guard<py::gil_scoped_release>());
         
+        cls.def("apply_with_default",
+                &LabelMapper_t::template apply_with_default<xt::pyarray<int8_t>>,
+                "src"_a, "default"_a=0,
+                py::call_guard<py::gil_scoped_release>());
         
+        cls.def("apply_with_default",
+                &LabelMapper_t::template apply_with_default<xt::pyarray<int16_t>>,
+                "src"_a, "default"_a=0,
+                py::call_guard<py::gil_scoped_release>());
+
+        cls.def("apply_with_default",
+                &LabelMapper_t::template apply_with_default<xt::pyarray<int32_t>>,
+                "src"_a, "default"_a=0,
+                py::call_guard<py::gil_scoped_release>());
+
+        cls.def("apply_with_default",
+                &LabelMapper_t::template apply_with_default<xt::pyarray<int64_t>>,
+                "src"_a, "default"_a=0,
+                py::call_guard<py::gil_scoped_release>());
+
         // Add an overload for LabelMapper(), which is actually a function that returns
         // the appropriate LabelMapper type (e.g. LabelMapper_u64u32)
         m.def("LabelMapper", make_label_mapper<domain_t, codomain_t>, "domain"_a, "codomain"_a);
@@ -186,26 +245,94 @@ namespace dvidutils
 
             .. autosummary::
                :toctree: _generate
-        
+
                LabelMapper
 
         )docu";
 
-        export_label_mapper<uint64_t, uint64_t>(m);
-        export_label_mapper<uint64_t, uint32_t>(m);
-        export_label_mapper<uint32_t, uint64_t>(m);
+        // # Python is easier than C++ metaprogramming!
+        // from itertools import product
+        // types = [f"{u}int{width}_t" for u, width in product(['', 'u'], [8, 16, 32, 64])]
+        // for t1, t2 in product(types, types):
+        //     print(f'export_label_mapper<{t1},  {t2}>(m);')
 
-        export_label_mapper<uint32_t, uint32_t>(m);
-        export_label_mapper<uint16_t, uint16_t>(m);
+        export_label_mapper<int8_t,  int8_t>(m);
+        export_label_mapper<int8_t,  int16_t>(m);
+        export_label_mapper<int8_t,  int32_t>(m);
+        export_label_mapper<int8_t,  int64_t>(m);
+        export_label_mapper<int8_t,  uint8_t>(m);
+        export_label_mapper<int8_t,  uint16_t>(m);
+        export_label_mapper<int8_t,  uint32_t>(m);
+        export_label_mapper<int8_t,  uint64_t>(m);
+        export_label_mapper<int16_t,  int8_t>(m);
+        export_label_mapper<int16_t,  int16_t>(m);
+        export_label_mapper<int16_t,  int32_t>(m);
+        export_label_mapper<int16_t,  int64_t>(m);
+        export_label_mapper<int16_t,  uint8_t>(m);
+        export_label_mapper<int16_t,  uint16_t>(m);
+        export_label_mapper<int16_t,  uint32_t>(m);
+        export_label_mapper<int16_t,  uint64_t>(m);
+        export_label_mapper<int32_t,  int8_t>(m);
+        export_label_mapper<int32_t,  int16_t>(m);
+        export_label_mapper<int32_t,  int32_t>(m);
+        export_label_mapper<int32_t,  int64_t>(m);
+        export_label_mapper<int32_t,  uint8_t>(m);
+        export_label_mapper<int32_t,  uint16_t>(m);
+        export_label_mapper<int32_t,  uint32_t>(m);
+        export_label_mapper<int32_t,  uint64_t>(m);
+        export_label_mapper<int64_t,  int8_t>(m);
+        export_label_mapper<int64_t,  int16_t>(m);
+        export_label_mapper<int64_t,  int32_t>(m);
+        export_label_mapper<int64_t,  int64_t>(m);
+        export_label_mapper<int64_t,  uint8_t>(m);
+        export_label_mapper<int64_t,  uint16_t>(m);
+        export_label_mapper<int64_t,  uint32_t>(m);
+        export_label_mapper<int64_t,  uint64_t>(m);
+        export_label_mapper<uint8_t,  int8_t>(m);
+        export_label_mapper<uint8_t,  int16_t>(m);
+        export_label_mapper<uint8_t,  int32_t>(m);
+        export_label_mapper<uint8_t,  int64_t>(m);
         export_label_mapper<uint8_t,  uint8_t>(m);
+        export_label_mapper<uint8_t,  uint16_t>(m);
+        export_label_mapper<uint8_t,  uint32_t>(m);
+        export_label_mapper<uint8_t,  uint64_t>(m);
+        export_label_mapper<uint16_t,  int8_t>(m);
+        export_label_mapper<uint16_t,  int16_t>(m);
+        export_label_mapper<uint16_t,  int32_t>(m);
+        export_label_mapper<uint16_t,  int64_t>(m);
+        export_label_mapper<uint16_t,  uint8_t>(m);
+        export_label_mapper<uint16_t,  uint16_t>(m);
+        export_label_mapper<uint16_t,  uint32_t>(m);
+        export_label_mapper<uint16_t,  uint64_t>(m);
+        export_label_mapper<uint32_t,  int8_t>(m);
+        export_label_mapper<uint32_t,  int16_t>(m);
+        export_label_mapper<uint32_t,  int32_t>(m);
+        export_label_mapper<uint32_t,  int64_t>(m);
+        export_label_mapper<uint32_t,  uint8_t>(m);
+        export_label_mapper<uint32_t,  uint16_t>(m);
+        export_label_mapper<uint32_t,  uint32_t>(m);
+        export_label_mapper<uint32_t,  uint64_t>(m);
+        export_label_mapper<uint64_t,  int8_t>(m);
+        export_label_mapper<uint64_t,  int16_t>(m);
+        export_label_mapper<uint64_t,  int32_t>(m);
+        export_label_mapper<uint64_t,  int64_t>(m);
+        export_label_mapper<uint64_t,  uint8_t>(m);
+        export_label_mapper<uint64_t,  uint16_t>(m);
+        export_label_mapper<uint64_t,  uint32_t>(m);
+        export_label_mapper<uint64_t,  uint64_t>(m);
 
         m.def("downsample_labels", &py_downsample_labels<uint64_t>, "labels"_a, "factor"_a, "suppress_zero"_a=false, py::call_guard<py::gil_scoped_release>());
         m.def("downsample_labels", &py_downsample_labels<uint32_t>, "labels"_a, "factor"_a, "suppress_zero"_a=false, py::call_guard<py::gil_scoped_release>());
         m.def("downsample_labels", &py_downsample_labels<uint16_t>, "labels"_a, "factor"_a, "suppress_zero"_a=false, py::call_guard<py::gil_scoped_release>());
         m.def("downsample_labels", &py_downsample_labels<uint8_t>,  "labels"_a, "factor"_a, "suppress_zero"_a=false, py::call_guard<py::gil_scoped_release>());
 
+        m.def("downsample_labels", &py_downsample_labels<int64_t>, "labels"_a, "factor"_a, "suppress_zero"_a=false, py::call_guard<py::gil_scoped_release>());
+        m.def("downsample_labels", &py_downsample_labels<int32_t>, "labels"_a, "factor"_a, "suppress_zero"_a=false, py::call_guard<py::gil_scoped_release>());
+        m.def("downsample_labels", &py_downsample_labels<int16_t>, "labels"_a, "factor"_a, "suppress_zero"_a=false, py::call_guard<py::gil_scoped_release>());
+        m.def("downsample_labels", &py_downsample_labels<int8_t>,  "labels"_a, "factor"_a, "suppress_zero"_a=false, py::call_guard<py::gil_scoped_release>());
+
         m.def("remap_duplicates", &remap_duplicates<xt::pytensor<float, 2>, xt::pytensor<uint32_t, 2>>, "vertices"_a, py::call_guard<py::gil_scoped_release>());
-        
+
         m.def("encode_faces_to_drc_bytes",
               &encode_faces_to_drc_bytes, // <-- Wow, that's an important '&' character.  If omitted, it causes segfaults during DECODE???
               "vertices"_a,
@@ -215,7 +342,7 @@ namespace dvidutils
               "position_quantization_bits"_a=DEFAULT_POSITION_QUANTIZATION_BITS,
               "normal_quantization_bits"_a=DEFAULT_NORMAL_QUANTIZATION_BITS,
               "generic_quantization_bits"_a=DEFAULT_GENERIC_QUANTIZATION_BITS);
-    
+
         m.def("decode_drc_bytes_to_faces", &decode_drc_bytes_to_faces, "drc_bytes"_a);
 
         m.def("destripe", &py_destripe, "image"_a, "seams"_a);
