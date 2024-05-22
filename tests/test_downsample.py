@@ -1,11 +1,11 @@
+import faulthandler
+faulthandler.enable()
+
 import sys
 from itertools import product
 import pytest
 import numpy as np
 from dvidutils import downsample_labels
-
-import faulthandler
-faulthandler.enable()
 
 
 def test_downsample_labels_2D():

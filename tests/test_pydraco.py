@@ -1,12 +1,12 @@
+import faulthandler
+faulthandler.enable()
+
 import sys
 from itertools import product
 import pytest
 import numpy as np
 import pandas as pd
 from dvidutils import encode_faces_to_drc_bytes, decode_drc_bytes_to_faces
-
-import faulthandler
-faulthandler.enable()
 
 def test_decode_invalid():
     bogus_data = b"This ain't a mesh file!"

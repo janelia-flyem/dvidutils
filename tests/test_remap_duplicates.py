@@ -1,11 +1,11 @@
+import faulthandler
+faulthandler.enable()
+
 import sys
 from itertools import product
 import pytest
 import numpy as np
 from dvidutils import remap_duplicates
-
-import faulthandler
-faulthandler.enable()
 
 def test_basic():
     vertices = np.zeros((10, 3), np.float32)

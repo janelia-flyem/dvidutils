@@ -1,11 +1,11 @@
+import faulthandler
+faulthandler.enable()
+
 import sys
 from itertools import product
 import pytest
 import numpy as np
 from dvidutils import LabelMapper
-
-import faulthandler
-faulthandler.enable()
 
 UINT_DTYPES = [np.uint8, np.uint16, np.uint32, np.uint64]
 #INT_DTYPES = [np.int8, np.int16, np.int32, np.int64]
