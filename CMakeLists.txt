@@ -67,8 +67,8 @@ set(DVIDUTILS_BUILD_OUTPUT_DIR "${CMAKE_BINARY_DIR}/$<CONFIG>")
 set(DVIDUTILS_PACKAGE "${DVIDUTILS_BUILD_OUTPUT_DIR}/dvidutils")
 
 # Target for the compiled module -- install to <build-dir>/dvidutils/_dvidutils.XXX
-###pybind11_add_module(_dvidutils src/destripe.cpp src/main.cpp) # Also locates Python, so we can use e.g. PYTHON_SITE_PACKAGES
-add_library(_dvidutils MODULE src/destripe.cpp src/main.cpp)
+###pybind11_add_module(_dvidutils src/main.cpp) # Also locates Python, so we can use e.g. PYTHON_SITE_PACKAGES
+add_library(_dvidutils MODULE src/main.cpp)
 target_link_libraries(_dvidutils PUBLIC pybind11::module)
 set_target_properties(_dvidutils PROPERTIES PREFIX "")
 
@@ -90,13 +90,6 @@ add_custom_target(dvidutils
      COMMAND cp -R "${CMAKE_SOURCE_DIR}/dvidutils/*" "${DVIDUTILS_PACKAGE}/"
 )
 add_dependencies(dvidutils _dvidutils)
-
-
-##
-## Destripe test utility -- not processed by 'make install'
-##
-add_executable(destripe_main EXCLUDE_FROM_ALL src/destripe_main.cpp src/destripe.cpp src/pngutils.cpp)
-target_link_libraries(destripe_main PRIVATE libpng.dylib)
 
 
 #
