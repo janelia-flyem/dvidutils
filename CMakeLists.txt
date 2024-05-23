@@ -67,9 +67,8 @@ set(DVIDUTILS_BUILD_OUTPUT_DIR "${CMAKE_BINARY_DIR}/$<CONFIG>")
 set(DVIDUTILS_PACKAGE "${DVIDUTILS_BUILD_OUTPUT_DIR}/dvidutils")
 
 # Target for the compiled module -- install to <build-dir>/dvidutils/_dvidutils.XXX
-###pybind11_add_module(_dvidutils src/main.cpp) # Also locates Python, so we can use e.g. PYTHON_SITE_PACKAGES
-add_library(_dvidutils MODULE src/main.cpp)
-target_link_libraries(_dvidutils PUBLIC pybind11::module)
+# https://github.com/pybind/pybind11/issues/3907#issuecomment-1170561643
+pybind11_add_module(_dvidutils MODULE src/main.cpp) # Also locates Python, so we can use e.g. PYTHON_SITE_PACKAGES
 set_target_properties(_dvidutils PROPERTIES PREFIX "")
 
 # Link to draco
