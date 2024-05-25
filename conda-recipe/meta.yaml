@@ -27,7 +27,7 @@ requirements:
     - xtensor-python
     - pybind11
     - draco 1.3.4.*
-    - boost
+    - boost-cpp  # We only use some headers.
   run:
     - python {{ python }}*
     - numpy {{ numpy }}*
