@@ -23,9 +23,9 @@ requirements:
   host:
     - python {{ python }}*
     - numpy {{ numpy }}* # To avoid runtime errors about the numpy ABI
-    - xtensor
-    - xtensor-python
-    - pybind11
+    - xtensor 0.4.23
+    - xtensor-python 0.26.1
+    - pybind11 2.10
     - draco 1.3.4.*
     - boost
   run:
