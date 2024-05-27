@@ -127,18 +127,27 @@ namespace dvidutils
     template <typename T>
     xt::pyarray<T> py_downsample_labels(xt::pyarray<T> const & labels, int factor, bool suppress_zero )
     {
-        // FIXME: There's GOT to be a more elegant way to auto-select the right call based on dimansionality
-        if (labels.shape().size() == 3)
+        xt::xarray<T> res;
         {
-            return downsample_labels<xt::pyarray<T>, 3>(labels, factor, suppress_zero);
+            py::gil_scoped_release release;
+            
+            // FIXME: There's GOT to be a more elegant way to auto-select the right call based on dimansionality
+            if (labels.shape().size() == 3)
+            {
+                res = downsample_labels<xt::xarray<T>, 3>(labels, factor, suppress_zero);
+            }
+            else if (labels.shape().size() == 2)
+            {
+                res = downsample_labels<xt::xarray<T>, 2>(labels, factor, suppress_zero);
+            }
+            else
+            {
+                std::ostringstream ss;
+                ss << "Unsupported number of dimensions: " << labels.shape().size();
+                throw std::runtime_error(ss.str());
+            }
         }
-        if (labels.shape().size() == 2)
-        {
-            return downsample_labels<xt::pyarray<T>, 2>(labels, factor, suppress_zero);
-        }
-        std::ostringstream ss;
-        ss << "Unsupported number of dimensions: " << labels.shape().size();
-        throw std::runtime_error(ss.str());
+        return res;
     }
 
 
@@ -166,12 +175,12 @@ namespace dvidutils
         export_label_mapper<uint16_t, uint16_t>(m);
         export_label_mapper<uint8_t,  uint8_t>(m);
 
-        m.def("downsample_labels", &py_downsample_labels<uint64_t>, "labels"_a, "factor"_a, "suppress_zero"_a=false, py::call_guard<py::gil_scoped_release>());
-        m.def("downsample_labels", &py_downsample_labels<uint32_t>, "labels"_a, "factor"_a, "suppress_zero"_a=false, py::call_guard<py::gil_scoped_release>());
-        m.def("downsample_labels", &py_downsample_labels<uint16_t>, "labels"_a, "factor"_a, "suppress_zero"_a=false, py::call_guard<py::gil_scoped_release>());
-        m.def("downsample_labels", &py_downsample_labels<uint8_t>,  "labels"_a, "factor"_a, "suppress_zero"_a=false, py::call_guard<py::gil_scoped_release>());
+        m.def("downsample_labels", &py_downsample_labels<uint64_t>, "labels"_a, "factor"_a, "suppress_zero"_a=false);
+        m.def("downsample_labels", &py_downsample_labels<uint32_t>, "labels"_a, "factor"_a, "suppress_zero"_a=false);
+        m.def("downsample_labels", &py_downsample_labels<uint16_t>, "labels"_a, "factor"_a, "suppress_zero"_a=false);
+        m.def("downsample_labels", &py_downsample_labels<uint8_t>,  "labels"_a, "factor"_a, "suppress_zero"_a=false);
 
-        m.def("remap_duplicates", &remap_duplicates<xt::pytensor<float, 2>, xt::pytensor<uint32_t, 2>>, "vertices"_a, py::call_guard<py::gil_scoped_release>());
+        m.def("remap_duplicates", &remap_duplicates<xt::pytensor<float, 2>, xt::pytensor<uint32_t, 2>>, "vertices"_a);
         
         m.def("encode_faces_to_drc_bytes",
               &encode_faces_to_drc_bytes, // <-- Wow, that's an important '&' character.  If omitted, it causes segfaults during DECODE???
