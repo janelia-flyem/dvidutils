@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <cstdint>
+#include <cstddef>
 #include "destripe.hpp"
 
 std::vector<uint8_t> destripe(uint8_t * image, size_t w, size_t h, size_t YC,
