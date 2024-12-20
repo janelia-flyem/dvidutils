@@ -131,7 +131,7 @@ namespace dvidutils
         {
             py::gil_scoped_release release;
             
-            // FIXME: There's GOT to be a more elegant way to auto-select the right call based on dimansionality
+            // FIXME: There's GOT to be a more elegant way to auto-select the right call based on dimensionality
             if (labels.shape().size() == 3)
             {
                 res = downsample_labels<xt::xarray<T>, 3>(labels, factor, suppress_zero);
