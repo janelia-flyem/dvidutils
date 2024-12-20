@@ -11,25 +11,20 @@ from dvidutils import downsample_labels
 def test_downsample_labels_2D():
     a = [[0,0, 1,1, 2,2, 3,3],
          [0,0, 1,0, 2,0, 3,0],
-
          [0,0, 0,0, 2,2, 3,3],
          [0,0, 8,9, 8,9, 8,9]]
     #           ^
     #           |
     #           `-- In the suppress_zero case, we choose the LOWER
     #               of the two tied values (in this case, 8).
-
     a = np.array(a)
     a_copy = a.copy()
     d = downsample_labels(a, 2, suppress_zero=False)
     assert (a == a_copy).all(), "input was overwritten!"
-
     assert (d == [[0, 1, 2, 3],
                   [0, 0, 2, 3]]).all()
-    
     d = downsample_labels(a, 2, suppress_zero=True)
     assert (a == a_copy).all(), "input was overwritten!"
-    
     assert (d == [[0, 1, 2, 3],
                   [0, 8, 2, 3]]).all()
 
