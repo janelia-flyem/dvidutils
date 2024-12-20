@@ -30,5 +30,5 @@ cmake .. \
     -DCMAKE_CXX_FLAGS="${CXXFLAGS}" \
 ##
 
-make -j${CPU_COUNT} dvidutils
+VERBOSE=1 make -j${CPU_COUNT} dvidutils
 make install

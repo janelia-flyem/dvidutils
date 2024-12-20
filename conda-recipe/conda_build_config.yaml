@@ -10,26 +10,61 @@
 #   shared-config:
 #     master-conda-build-config: master-conda-build-config.yaml
 #
+# In general, we should try to keep this in-sync with conda-forge's master build config:
+# https://github.com/conda-forge/conda-forge-pinning-feedstock/blob/master/recipe/conda_build_config.yaml
 
 boost:
-  - 1.78
+  - 1.84.0
 boost_cpp:
-  - 1.78
+  - 1.84.0
 hdf5:
-  - 1.12.1
+  - 1.14.3
 numpy:
-  - 1.21
+  #- 1.21  # For python 3.10
+  #- 1.22.0  # For python 3.10
+  #- 1.23  # Earliest numpy for py3.11
+  #- 1.26  # Same as conda-forge-pinning (on 2024-12-20), even though numpy 2.0 exists.
+  - '2.2'   # The numpy 2.2 feedstock has a 'default_abi_level' defined to 1.21, so this should be okay.
 python:
-  - 3.10
+  - 3.12.* *_cpython
 python_impl:
   - cpython
 
+# conda-forge uses these zip_keys, so we do it here even though
+# it's not necessary since we only use a single version of each.
+zip_keys:
+  -
+    - python
+    - numpy
+    - python_impl
+
 pin_run_as_build:
-  boost: x.x
-  hdf5: x.x.x
-  numpy: x.x
-  python: x.x
+  boost:
+    max_pin: x.x.x
+  boost_cpp:
+    max_pin: x.x.x
+  hdf5:
+    max_pin: x.x.x
+  numpy:
+    max_pin: x.x
+  python:
+    max_pin: x.x
 
 CONDA_BUILD_SYSROOT:
-  # The developer's default SDK
+  # Most conda-forge packages are compatible with MacOSX 10.9,
+  # but golang-1.16 requires at least MacOSX 10.13.
+  # (See the download page: https://go.dev/dl/)
+  #
+  # The simplest thing to do is to download the SDK from the release page in this repo:
+  # https://github.com/phracker/MacOSX-SDKs
+  # https://github.com/phracker/MacOSX-SDKs/releases
+  #
+  # Previously, we would use the XcodeLegacy script, via the following project,
+  # but it doesn't seem to work with new versions of Xcode.
+  # https://github.com/devernay/xcodelegacy
+
+  #- /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk
   - /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk
+
+# MACOSX_DEPLOYMENT_TARGET:
+#   - 10.13
