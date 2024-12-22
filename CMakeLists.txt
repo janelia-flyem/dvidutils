@@ -26,6 +26,11 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+
+    # See:
+    # https://github.com/llvm/llvm-project/issues/91504
+    # https://github.com/exasmr/openmc/commit/62bb754ed4a2d21624bc9d67992fc58710593358#diff-1712b235e02bd4a3ad866fe26447a6dc5c1b449faeea513f449d244d46d03cf5R42
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-relaxed-template-template-args")
 endif()
 
 
