@@ -61,7 +61,7 @@ find_package(NumPy REQUIRED)
 include_directories(${NUMPY_INCLUDE_DIRS})
 
 # boost
-FIND_PACKAGE(Boost REQUIRED COMPONENTS container)
+FIND_PACKAGE(Boost REQUIRED)
 include_directories(AFTER ${Boost_INCLUDE_DIR})
 
 #-------------------------------------------------------------------------------------------------------------------
