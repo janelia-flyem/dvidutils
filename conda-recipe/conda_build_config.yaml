@@ -13,10 +13,12 @@
 # In general, we should try to keep this in-sync with conda-forge's master build config:
 # https://github.com/conda-forge/conda-forge-pinning-feedstock/blob/master/recipe/conda_build_config.yaml
 
-boost:
-  - 1.86.0
-boost_cpp:
-  - 1.86.0
+libboost_headers:
+  - '1.86'
+libboost_devel:
+  - '1.86'
+libboost_python_devel:
+  - '1.86'
 hdf5:
   - 1.14.3
 numpy:
@@ -39,9 +41,11 @@ zip_keys:
     - python_impl
 
 pin_run_as_build:
-  boost:
+  libboost_headers:
     max_pin: x.x.x
-  boost_cpp:
+  libboost_devel:
+    max_pin: x.x.x
+  libboost_python_devel:
     max_pin: x.x.x
   hdf5:
     max_pin: x.x.x
