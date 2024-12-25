@@ -30,7 +30,6 @@ requirements:
     - libboost-headers  # We only use some headers.
   run:
     - python {{ python }}*
-    - {{ pin_compatible('numpy') }}
     - draco 1.3.4.*
 
 test:
