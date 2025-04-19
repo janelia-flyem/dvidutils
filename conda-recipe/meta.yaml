@@ -26,8 +26,10 @@ requirements:
     - xtensor
     - xtensor-python
     - pybind11
+    - libboost-headers  # We only use some boost headers.
+
+    # Note: Newer versions of draco have a different API, so upgrading will require code changes in dvidutils.
     - draco 1.3.4.*
-    - libboost-headers  # We only use some headers.
   run:
     - python {{ python }}*
     - draco 1.3.4.*
