@@ -6,11 +6,11 @@
 
 #include <boost/functional/hash.hpp>
 
-#include "xtensor/xtensor.hpp"
-#include "xtensor/xview.hpp"
-#include "xtensor/xmath.hpp"
-#include "xtensor/xoperation.hpp"
-#include "xtensor/xadapt.hpp"
+#include "xtensor/containers/xtensor.hpp"
+#include "xtensor/views/xview.hpp"
+#include "xtensor/core/xmath.hpp"
+#include "xtensor/core/xoperation.hpp"
+#include "xtensor/containers/xadapt.hpp"
 
 using std::size_t;
 using std::uint32_t;
