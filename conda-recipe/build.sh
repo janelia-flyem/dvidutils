@@ -31,6 +31,7 @@ cmake .. \
     -DBOOST_ROOT="${PREFIX}" \
     -DBoost_LIBRARY_DIR="${PREFIX}/lib" \
     -DBoost_INCLUDE_DIR="${PREFIX}/include" \
+    -DCMAKE_OSX_ARCHITECTURES="$(uname -m)" \
 ##
 
 VERBOSE=1 make -j${CPU_COUNT} dvidutils
