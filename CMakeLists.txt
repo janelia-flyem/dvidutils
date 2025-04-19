@@ -47,22 +47,24 @@ add_definitions("-DDRACO_ATTRIBUTE_DEDUPLICATION_SUPPORTED=1")
 #-------------------------------------------------------------------------------------------------------------------
 # Setup python bindings
 #-------------------------------------------------------------------------------------------------------------------
-set(CMAKE_PREFIX_PATH $ENV{CONDA_PREFIX} CACHE PATH "")
+# CMAKE_PREFIX_PATH is expected to be set by the caller (e.g., build script)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_PREFIX_PATH}/share/cmake/pybind11")
+
+# Python_ROOT_DIR and Python_EXECUTABLE can also be set by the caller if needed,
+# but find_package should use CMAKE_PREFIX_PATH and Python_ROOT_DIR.
+
+# Find Python first (required by pybind11)
+# CMake should find Python components using CMAKE_PREFIX_PATH and Python_ROOT_DIR
+find_package(Python COMPONENTS Interpreter Development.SABIModule NumPy REQUIRED)
 find_package(pybind11 CONFIG REQUIRED)
 
-include_directories("${CMAKE_PREFIX_PATH}/include")
+# Explicitly add the general prefix include path for headers (like Boost)
+include_directories(${CMAKE_PREFIX_PATH}/include)
 
-link_directories("${CMAKE_PREFIX_PATH}/lib")
+# Set NumPy include dirs from the found package
+include_directories(${Python_NumPy_INCLUDE_DIRS})
 
-# numpy
-set(PYBIND11_CPP_STANDARD -std=c++14)
-find_package(NumPy REQUIRED)
-include_directories(${NUMPY_INCLUDE_DIRS})
-
-# boost
-FIND_PACKAGE(Boost REQUIRED)
-include_directories(AFTER ${Boost_INCLUDE_DIR})
+# boost - Removed FIND_PACKAGE as only headers are needed and assumed to be in CMAKE_PREFIX_PATH/include
 
 #-------------------------------------------------------------------------------------------------------------------
 # Add the package

@@ -28,10 +28,11 @@ cmake .. \
     -DCMAKE_CXX_LINK_FLAGS="${LDFLAGS}" \
     -DCMAKE_EXE_LINKER_FLAGS="${LDFLAGS}" \
     -DCMAKE_CXX_FLAGS="${CXXFLAGS}" \
+    -DCMAKE_OSX_ARCHITECTURES="$(uname -m)" \
     -DBOOST_ROOT="${PREFIX}" \
     -DBoost_LIBRARY_DIR="${PREFIX}/lib" \
     -DBoost_INCLUDE_DIR="${PREFIX}/include" \
-    -DCMAKE_OSX_ARCHITECTURES="$(uname -m)" \
+    -DPython_ROOT_DIR=${PREFIX} \
 ##
 
 VERBOSE=1 make -j${CPU_COUNT} dvidutils
