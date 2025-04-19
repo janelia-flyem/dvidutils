@@ -6,22 +6,7 @@ project(dvidutils)
 
 include(CheckCXXCompilerFlag)
 
-#-------------------------------------------------------------------------------------------------------------------
-# check for c++ 14 support
-#-------------------------------------------------------------------------------------------------------------------
-
-# FIXME c++14 checks are broken???
-if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-    CHECK_CXX_COMPILER_FLAG("-std=c++14" HAS_CPP14_FLAG)
-    #CHECK_CXX_COMPILER_FLAG("-std=c++11" HAS_CPP11_FLAG)
-    if (HAS_CPP14_FLAG)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
-    else()
-        message(FATAL_ERROR "Unsupported compiler -- multi-array  requires C++14 support!")
-    endif()
-endif()
-
-
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
