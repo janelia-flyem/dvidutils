@@ -97,5 +97,5 @@ add_dependencies(pytests dvidutils)
 #
 # python sources were already copied into the build output,
 # so just copy the entire build output to the install dir
-install(DIRECTORY "${DVIDUTILS_PACKAGE}" DESTINATION "${PYTHON_SITE_PACKAGES}")
+install(DIRECTORY "${DVIDUTILS_PACKAGE}" DESTINATION "${Python_SITEARCH}")
 
