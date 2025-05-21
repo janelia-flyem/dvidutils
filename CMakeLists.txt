@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.30)
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake )
 
 SET(PROJECT_NAME "dvidutils")
@@ -6,22 +6,7 @@ project(dvidutils)
 
 include(CheckCXXCompilerFlag)
 
-#-------------------------------------------------------------------------------------------------------------------
-# check for c++ 14 support
-#-------------------------------------------------------------------------------------------------------------------
-
-# FIXME c++14 checks are broken???
-if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-    CHECK_CXX_COMPILER_FLAG("-std=c++14" HAS_CPP14_FLAG)
-    #CHECK_CXX_COMPILER_FLAG("-std=c++11" HAS_CPP11_FLAG)
-    if (HAS_CPP14_FLAG)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
-    else()
-        message(FATAL_ERROR "Unsupported compiler -- multi-array  requires C++14 support!")
-    endif()
-endif()
-
-
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
@@ -47,22 +32,24 @@ add_definitions("-DDRACO_ATTRIBUTE_DEDUPLICATION_SUPPORTED=1")
 #-------------------------------------------------------------------------------------------------------------------
 # Setup python bindings
 #-------------------------------------------------------------------------------------------------------------------
-set(CMAKE_PREFIX_PATH $ENV{CONDA_PREFIX} CACHE PATH "")
+# CMAKE_PREFIX_PATH is expected to be set by the caller (e.g., build script)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_PREFIX_PATH}/share/cmake/pybind11")
+
+# Python_ROOT_DIR and Python_EXECUTABLE can also be set by the caller if needed,
+# but find_package should use CMAKE_PREFIX_PATH and Python_ROOT_DIR.
+
+# Find Python first (required by pybind11)
+# CMake should find Python components using CMAKE_PREFIX_PATH and Python_ROOT_DIR
+find_package(Python COMPONENTS Interpreter Development.SABIModule NumPy REQUIRED)
 find_package(pybind11 CONFIG REQUIRED)
 
-include_directories("${CMAKE_PREFIX_PATH}/include")
+# Explicitly add the general prefix include path for headers (like Boost)
+include_directories(${CMAKE_PREFIX_PATH}/include)
 
-link_directories("${CMAKE_PREFIX_PATH}/lib")
+# Set NumPy include dirs from the found package
+include_directories(${Python_NumPy_INCLUDE_DIRS})
 
-# numpy
-set(PYBIND11_CPP_STANDARD -std=c++14)
-find_package(NumPy REQUIRED)
-include_directories(${NUMPY_INCLUDE_DIRS})
-
-# boost
-FIND_PACKAGE(Boost REQUIRED)
-include_directories(AFTER ${Boost_INCLUDE_DIR})
+# boost - Removed FIND_PACKAGE as only headers are needed and assumed to be in CMAKE_PREFIX_PATH/include
 
 #-------------------------------------------------------------------------------------------------------------------
 # Add the package
@@ -110,5 +97,5 @@ add_dependencies(pytests dvidutils)
 #
 # python sources were already copied into the build output,
 # so just copy the entire build output to the install dir
-install(DIRECTORY "${DVIDUTILS_PACKAGE}" DESTINATION "${PYTHON_SITE_PACKAGES}")
+install(DIRECTORY "${DVIDUTILS_PACKAGE}" DESTINATION "${Python_SITEARCH}")
 

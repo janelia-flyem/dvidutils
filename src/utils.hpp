@@ -2,7 +2,7 @@
 #define DVIDUTILS_UTILS_HPP
 
 #include <cstdint>
-#include "xtensor/xvectorize.hpp"
+#include "xtensor/core/xvectorize.hpp"
 
 namespace dvidutils
 {

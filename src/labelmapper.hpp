@@ -4,11 +4,11 @@
 #include <utility>
 #include <unordered_map>
 
-#include "xtensor/xarray.hpp"
-#include "xtensor/xtensor.hpp"
-#include "xtensor/xmath.hpp"
-#include "xtensor/xnoalias.hpp"
-#include "xtensor/xvectorize.hpp"
+#include "xtensor/containers/xarray.hpp"
+#include "xtensor/containers/xtensor.hpp"
+#include "xtensor/core/xmath.hpp"
+#include "xtensor/core/xnoalias.hpp"
+#include "xtensor/core/xvectorize.hpp"
 
 namespace dvidutils
 {

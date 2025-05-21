@@ -5,10 +5,10 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
-#include "xtensor/xarray.hpp"
-#include "xtensor/xtensor.hpp"
-#include "xtensor/xadapt.hpp"
-#include "xtensor/xio.hpp"
+#include "xtensor/containers/xarray.hpp"
+#include "xtensor/containers/xtensor.hpp"
+#include "xtensor/containers/xadapt.hpp"
+#include "xtensor/io/xio.hpp"
 
 #define FORCE_IMPORT_ARRAY
 #include "xtensor-python/pyarray.hpp"

@@ -11,7 +11,7 @@
 
 #include "pybind11/pybind11.h"
 
-#include "xtensor/xmath.hpp"
+#include "xtensor/core/xmath.hpp"
 #include "xtensor-python/pytensor.hpp"
 
 using std::uint32_t;

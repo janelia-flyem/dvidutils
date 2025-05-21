@@ -4,12 +4,12 @@
 #include <algorithm>
 #include <boost/container/flat_map.hpp>
 
-#include "xtensor/xarray.hpp"
-#include "xtensor/xtensor.hpp"
-#include "xtensor/xmath.hpp"
-#include "xtensor/xview.hpp"
-#include "xtensor/xvectorize.hpp"
-#include "xtensor/xeval.hpp"
+#include "xtensor/containers/xarray.hpp"
+#include "xtensor/containers/xtensor.hpp"
+#include "xtensor/core/xmath.hpp"
+#include "xtensor/views/xview.hpp"
+#include "xtensor/core/xvectorize.hpp"
+#include "xtensor/core/xeval.hpp"
 
 namespace dvidutils {
     
